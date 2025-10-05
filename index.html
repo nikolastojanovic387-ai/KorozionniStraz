@@ -30,11 +30,11 @@
         }
         .controls {
             background: rgba(255, 255, 255, 0.95);
-            padding: 12px;
+            padding: 8px;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
             font-size: 10px;
             z-index: 100;
-            max-height: 40vh;
+            max-height: 30vh;
             overflow-y: auto;
         }
         .white-bg .controls {
@@ -42,29 +42,29 @@
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }
         .control-group {
-            margin: 8px 0;
+            margin: 6px 0;
         }
         .control-group label {
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 3px;
             color: #333;
             font-size: 10px;
             font-weight: 600;
         }
         .button-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin-bottom: 8px;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 4px;
+            margin-bottom: 6px;
         }
         button {
-            padding: 8px 10px;
+            padding: 6px 4px;
             border: none;
-            border-radius: 5px;
+            border-radius: 4px;
             background: #2a5298;
             color: white;
             cursor: pointer;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 600;
             transition: all 0.3s;
         }
@@ -76,44 +76,32 @@
         button:active {
             transform: translateY(0);
         }
-        .checkbox-group {
-            display: flex;
+        .compact-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 8px;
             align-items: center;
-            gap: 6px;
-            margin: 6px 0;
-            padding: 6px;
+            margin: 4px 0;
+            padding: 5px;
             background: rgba(42, 82, 152, 0.1);
-            border-radius: 5px;
+            border-radius: 4px;
+        }
+        .compact-row label {
+            margin: 0;
+            font-size: 9px;
+            font-weight: 600;
+            color: #333;
         }
         input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             cursor: pointer;
-        }
-        .checkbox-group label {
-            margin: 0;
-            flex: 1;
-            font-size: 10px;
-        }
-        .bg-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin: 8px 0;
-            padding: 8px;
-            background: rgba(42, 82, 152, 0.1);
-            border-radius: 5px;
-        }
-        .bg-toggle-label {
-            font-size: 10px;
-            color: #333;
-            font-weight: 600;
         }
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 45px;
-            height: 22px;
+            width: 40px;
+            height: 20px;
         }
         .toggle-switch input {
             opacity: 0;
@@ -129,13 +117,13 @@
             bottom: 0;
             background-color: #ccc;
             transition: .4s;
-            border-radius: 22px;
+            border-radius: 20px;
         }
         .toggle-slider:before {
             position: absolute;
             content: "";
-            height: 16px;
-            width: 16px;
+            height: 14px;
+            width: 14px;
             left: 3px;
             bottom: 3px;
             background-color: white;
@@ -146,32 +134,32 @@
             background-color: #2a5298;
         }
         input:checked + .toggle-slider:before {
-            transform: translateX(23px);
+            transform: translateX(20px);
         }
         .zoom-controls {
-            margin-top: 8px;
-            padding: 8px;
+            margin-top: 6px;
+            padding: 6px;
             background: rgba(42, 82, 152, 0.1);
-            border-radius: 5px;
+            border-radius: 4px;
         }
         .zoom-slider-container {
             display: flex;
             align-items: center;
-            gap: 8px;
-            margin: 8px 0;
+            gap: 6px;
+            margin: 4px 0;
         }
         .zoom-slider {
             flex: 1;
-            height: 5px;
+            height: 4px;
             -webkit-appearance: none;
             background: #ddd;
-            border-radius: 3px;
+            border-radius: 2px;
             outline: none;
         }
         .zoom-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #2a5298;
             cursor: pointer;
@@ -179,8 +167,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .zoom-slider::-moz-range-thumb {
-            width: 18px;
-            height: 18px;
+            width: 16px;
+            height: 16px;
             border-radius: 50%;
             background: #2a5298;
             cursor: pointer;
@@ -188,20 +176,20 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .zoom-value {
-            font-size: 10px;
+            font-size: 9px;
             color: #333;
             font-weight: 700;
-            min-width: 35px;
+            min-width: 30px;
             text-align: center;
             background: white;
-            padding: 3px 6px;
+            padding: 2px 4px;
             border-radius: 3px;
         }
         .zoom-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 6px;
-            margin-top: 6px;
+            gap: 4px;
+            margin-top: 4px;
         }
     </style>
 </head>
@@ -210,7 +198,6 @@
     
     <div class="controls">
         <div class="control-group">
-            <label>Показать компоненты:</label>
             <div class="button-grid">
                 <button id="showAll">Всё</button>
                 <button id="showTubes">Трубы</button>
@@ -219,19 +206,18 @@
             </div>
         </div>
         
-        <div class="control-group">
-            <div class="checkbox-group">
-                <input type="checkbox" id="toggleConnectors" checked>
-                <label for="toggleConnectors">Показать кольца</label>
-            </div>
-            <div class="checkbox-group">
-                <input type="checkbox" id="toggleRotation" checked>
-                <label for="toggleRotation">Авто-вращение</label>
-            </div>
+        <div class="compact-row">
+            <label for="toggleConnectors">Показать кольца</label>
+            <input type="checkbox" id="toggleConnectors" checked>
         </div>
         
-        <div class="bg-toggle">
-            <span class="bg-toggle-label">Белый фон</span>
+        <div class="compact-row">
+            <label for="toggleRotation">Авто-вращение</label>
+            <input type="checkbox" id="toggleRotation" checked>
+        </div>
+        
+        <div class="compact-row">
+            <label for="toggleBackground">Белый фон</label>
             <label class="toggle-switch">
                 <input type="checkbox" id="toggleBackground">
                 <span class="toggle-slider"></span>
@@ -251,7 +237,7 @@
         </div>
         
         <div class="control-group">
-            <button id="resetView" style="width: 100%;">🔄 Сбросить камеру</button>
+            <button id="resetView" style="width: 100%; padding: 6px;">🔄 Сбросить камеру</button>
         </div>
     </div>
 
