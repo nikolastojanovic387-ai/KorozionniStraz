@@ -335,8 +335,12 @@
     <script>
         let scene, camera, renderer, tubeGroup, capsGroup, connectorGroup, autoRotate = true;
         let isDragging = false, previousMousePosition = { x: 0, y: 0 }, rotation = { x: 0, y: 0 };
-        let capsuleManualRotation = false, zoomLevel = 2000; // Increased default zoom level
+        let capsuleManualRotation = false, zoomLevel = 2000;
         const minZoom = 100, maxZoom = 4000, zoomStep = 100;
+        
+        // Pinch-to-zoom variables
+        let initialPinchDistance = 0;
+        let initialZoomLevel = 0;
         
         function init() {
             scene = new THREE.Scene();
@@ -365,14 +369,18 @@
             
             createModel();
             
+            // Mouse events
             renderer.domElement.addEventListener('mousedown', onMouseDown);
             renderer.domElement.addEventListener('mousemove', onMouseMove);
             renderer.domElement.addEventListener('mouseup', () => isDragging = false);
             renderer.domElement.addEventListener('mouseleave', () => isDragging = false);
             renderer.domElement.addEventListener('wheel', onMouseWheel);
+            
+            // Touch events
             renderer.domElement.addEventListener('touchstart', onTouchStart);
             renderer.domElement.addEventListener('touchmove', onTouchMove);
-            renderer.domElement.addEventListener('touchend', () => isDragging = false);
+            renderer.domElement.addEventListener('touchend', onTouchEnd);
+            
             window.addEventListener('resize', onWindowResize);
             
             document.getElementById('showAll').addEventListener('click', () => showView('all'));
@@ -402,14 +410,86 @@
             camera.getWorldDirection(dir).normalize();
             camera.position.copy(new THREE.Vector3(0,0,0)).sub(dir.multiplyScalar(zoomLevel));
             camera.lookAt(0,0,0);
+            
+            // Update slider and value display
+            document.getElementById('zoomSlider').value = zoomLevel;
+            document.getElementById('zoomValue').textContent = zoomLevel;
         }
         
         function onMouseWheel(e) {
             e.preventDefault();
             zoomLevel = e.deltaY < 0 ? Math.max(minZoom, zoomLevel - zoomStep * 2) : Math.min(maxZoom, zoomLevel + zoomStep * 2);
-            document.getElementById('zoomSlider').value = zoomLevel;
-            document.getElementById('zoomValue').textContent = zoomLevel;
             updateZoom();
+        }
+        
+        // Calculate distance between two touch points
+        function getPinchDistance(touches) {
+            const dx = touches[0].clientX - touches[1].clientX;
+            const dy = touches[0].clientY - touches[1].clientY;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        function onTouchStart(e) {
+            e.preventDefault();
+            
+            if (e.touches.length === 1) {
+                // Single touch - rotation
+                isDragging = true;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                // Two touches - pinch to zoom
+                isDragging = false;
+                initialPinchDistance = getPinchDistance(e.touches);
+                initialZoomLevel = zoomLevel;
+            }
+        }
+        
+        function onTouchMove(e) {
+            e.preventDefault();
+            
+            if (e.touches.length === 1 && isDragging) {
+                // Single touch - rotation
+                rotation.y += (e.touches[0].clientX - previousMousePosition.x) * 0.005;
+                rotation.x += (e.touches[0].clientY - previousMousePosition.y) * 0.005;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            } else if (e.touches.length === 2) {
+                // Two touches - pinch to zoom
+                const currentPinchDistance = getPinchDistance(e.touches);
+                const pinchRatio = initialPinchDistance / currentPinchDistance;
+                
+                // Adjust zoom level based on pinch gesture
+                // Invert the ratio so that spreading fingers zooms in and pinching zooms out
+                zoomLevel = initialZoomLevel * (1 / pinchRatio);
+                
+                // Clamp zoom level to min/max values
+                zoomLevel = Math.max(minZoom, Math.min(maxZoom, zoomLevel));
+                
+                updateZoom();
+            }
+        }
+        
+        function onTouchEnd(e) {
+            if (e.touches.length === 0) {
+                isDragging = false;
+                initialPinchDistance = 0;
+            } else if (e.touches.length === 1) {
+                // Switch to single touch mode
+                isDragging = true;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        }
+        
+        function onMouseDown(e) { 
+            isDragging = true; 
+            previousMousePosition = { x: e.clientX, y: e.clientY }; 
+        }
+        
+        function onMouseMove(e) {
+            if (isDragging) {
+                rotation.y += (e.clientX - previousMousePosition.x) * 0.005;
+                rotation.x += (e.clientY - previousMousePosition.y) * 0.005;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
+            }
         }
         
         function createModel() {
@@ -572,31 +652,6 @@
                 window.capsuleGroup.visible = true;
                 window.capsuleGroup.position.set(0, 0, 0);
                 window.capsuleGroup.rotation.set(0, 0, 0);
-            }
-        }
-        
-        function onMouseDown(e) { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; }
-        function onMouseMove(e) {
-            if (isDragging) {
-                rotation.y += (e.clientX - previousMousePosition.x) * 0.005;
-                rotation.x += (e.clientY - previousMousePosition.y) * 0.005;
-                previousMousePosition = { x: e.clientX, y: e.clientY };
-            }
-        }
-        
-        function onTouchStart(e) {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
-            }
-        }
-        
-        function onTouchMove(e) {
-            if (isDragging && e.touches.length === 1) {
-                e.preventDefault();
-                rotation.y += (e.touches[0].clientX - previousMousePosition.x) * 0.005;
-                rotation.x += (e.touches[0].clientY - previousMousePosition.y) * 0.005;
-                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
             }
         }
         
