@@ -73,6 +73,64 @@
             height: 14px;
             cursor: pointer;
         }
+        
+        /* Zoom controls */
+        .zoom-controls {
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+        }
+        .zoom-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 8px 0;
+        }
+        .zoom-slider {
+            flex: 1;
+            height: 4px;
+            -webkit-appearance: none;
+            background: #ddd;
+            border-radius: 2px;
+            outline: none;
+        }
+        .zoom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #2a5298;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .zoom-slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #2a5298;
+            cursor: pointer;
+            border: 2px solid white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .zoom-value {
+            font-size: 10px;
+            color: #333;
+            font-weight: 600;
+            min-width: 30px;
+            text-align: center;
+        }
+        .zoom-buttons {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
+        }
+        .zoom-buttons button {
+            flex: 1;
+            padding: 4px 6px;
+            font-size: 9px;
+        }
+        
         .info {
             position: absolute;
             bottom: 10px;
@@ -121,6 +179,20 @@
                 width: 12px;
                 height: 12px;
             }
+            .zoom-slider-container {
+                gap: 6px;
+            }
+            .zoom-slider {
+                height: 3px;
+            }
+            .zoom-slider::-webkit-slider-thumb {
+                width: 14px;
+                height: 14px;
+            }
+            .zoom-value {
+                font-size: 9px;
+                min-width: 25px;
+            }
             .info {
                 display: none;
             }
@@ -153,6 +225,20 @@
                 <label for="toggleRotation">Авто-вращение</label>
             </div>
         </div>
+        
+        <!-- Zoom Controls -->
+        <div class="control-group zoom-controls">
+            <label for="zoomSlider">Масштаб:</label>
+            <div class="zoom-slider-container">
+                <input type="range" id="zoomSlider" class="zoom-slider" min="100" max="4000" value="1200" step="50">
+                <span id="zoomValue" class="zoom-value">1200</span>
+            </div>
+            <div class="zoom-buttons">
+                <button id="zoomIn">+ Приблизить</button>
+                <button id="zoomOut">- Отдалить</button>
+            </div>
+        </div>
+        
         <div class="control-group">
             <button id="resetView">Сбросить камеру</button>
         </div>
@@ -176,16 +262,24 @@
         let rotation = { x: 0, y: 0 };
         let capsuleManualRotation = false;
         
+        // Zoom variables - Increased max zoom 4x (from 2000 to 4000)
+        let zoomLevel = 1200;
+        const minZoom = 100;
+        const maxZoom = 4000; // Changed from 2000 to 4000 (4x more zoom out)
+        const zoomStep = 100;
+        
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a2e);
             
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 3000);
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 5000); // Increased far plane
             
             if (window.innerWidth < 768) {
                 camera.position.set(600, 400, 1000);
+                zoomLevel = 1000;
             } else {
                 camera.position.set(800, 600, 1200);
+                zoomLevel = 1200;
             }
             camera.lookAt(0, 0, 0);
             
@@ -213,11 +307,13 @@
             
             createModel();
             
+            // Event listeners for mouse/touch controls
             renderer.domElement.addEventListener('mousedown', onMouseDown);
             renderer.domElement.addEventListener('mousemove', onMouseMove);
             renderer.domElement.addEventListener('mouseup', onMouseUp);
             renderer.domElement.addEventListener('mouseleave', onMouseUp);
             renderer.domElement.addEventListener('click', onCanvasClick);
+            renderer.domElement.addEventListener('wheel', onMouseWheel);
             
             renderer.domElement.addEventListener('touchstart', onTouchStart);
             renderer.domElement.addEventListener('touchmove', onTouchMove);
@@ -225,6 +321,7 @@
             
             window.addEventListener('resize', onWindowResize);
             
+            // Control event listeners
             document.getElementById('showAll').addEventListener('click', () => showView('all'));
             document.getElementById('showTubes').addEventListener('click', () => showView('tubes'));
             document.getElementById('showCaps').addEventListener('click', () => showView('caps'));
@@ -237,7 +334,69 @@
                 autoRotate = e.target.checked;
             });
             
+            // Zoom control event listeners
+            const zoomSlider = document.getElementById('zoomSlider');
+            const zoomValue = document.getElementById('zoomValue');
+            const zoomInBtn = document.getElementById('zoomIn');
+            const zoomOutBtn = document.getElementById('zoomOut');
+            
+            zoomSlider.value = zoomLevel;
+            zoomValue.textContent = zoomLevel;
+            
+            zoomSlider.addEventListener('input', (e) => {
+                zoomLevel = parseInt(e.target.value);
+                updateZoom();
+                zoomValue.textContent = zoomLevel;
+            });
+            
+            zoomInBtn.addEventListener('click', () => {
+                zoomLevel = Math.max(minZoom, zoomLevel - zoomStep);
+                updateZoom();
+                zoomSlider.value = zoomLevel;
+                zoomValue.textContent = zoomLevel;
+            });
+            
+            zoomOutBtn.addEventListener('click', () => {
+                zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep);
+                updateZoom();
+                zoomSlider.value = zoomLevel;
+                zoomValue.textContent = zoomLevel;
+            });
+            
             animate();
+        }
+        
+        function updateZoom() {
+            // Calculate direction vector from camera to target
+            const direction = new THREE.Vector3();
+            camera.getWorldDirection(direction);
+            direction.normalize();
+            
+            // Move camera along the direction vector based on zoom level
+            const targetPosition = new THREE.Vector3(0, 0, 0);
+            const distance = zoomLevel;
+            
+            camera.position.copy(targetPosition).sub(direction.multiplyScalar(distance));
+            camera.lookAt(targetPosition);
+        }
+        
+        function onMouseWheel(e) {
+            e.preventDefault();
+            
+            // Adjust zoom level based on wheel direction
+            if (e.deltaY < 0) {
+                // Zoom in
+                zoomLevel = Math.max(minZoom, zoomLevel - zoomStep * 2);
+            } else {
+                // Zoom out
+                zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep * 2);
+            }
+            
+            // Update slider and value display
+            document.getElementById('zoomSlider').value = zoomLevel;
+            document.getElementById('zoomValue').textContent = zoomLevel;
+            
+            updateZoom();
         }
         
         function createModel() {
@@ -583,11 +742,16 @@
         
         function resetCamera() {
             if (window.innerWidth < 768) {
-                camera.position.set(600, 400, 1000);
+                zoomLevel = 1000;
             } else {
-                camera.position.set(800, 600, 1200);
+                zoomLevel = 1200;
             }
-            camera.lookAt(0, 0, 0);
+            
+            // Update slider and value display
+            document.getElementById('zoomSlider').value = zoomLevel;
+            document.getElementById('zoomValue').textContent = zoomLevel;
+            
+            updateZoom();
             rotation.x = 0;
             rotation.y = 0;
         }
@@ -665,8 +829,12 @@
             renderer.setSize(window.innerWidth, window.innerHeight);
             
             if (window.innerWidth < 768) {
-                camera.position.set(600, 400, 1000);
+                zoomLevel = 1000;
+            } else {
+                zoomLevel = 1200;
             }
+            
+            updateZoom();
         }
         
         function animate() {
