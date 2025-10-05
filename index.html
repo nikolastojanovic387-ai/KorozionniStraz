@@ -11,36 +11,35 @@
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             transition: background 0.5s ease;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
         }
         body.white-bg {
             background: #ffffff;
         }
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
         canvas {
             display: block;
+            width: 100%;
+            height: 100%;
         }
         .controls {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95);
             padding: 12px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            max-width: 180px;
-            font-size: 11px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
+            font-size: 10px;
             z-index: 100;
+            max-height: 40vh;
+            overflow-y: auto;
         }
         .white-bg .controls {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        .controls h3 {
-            margin: 0 0 10px 0;
-            color: #1e3c72;
-            font-size: 13px;
-        }
-        .white-bg .controls h3 {
-            color: #2a5298;
+            background: rgba(255, 255, 255, 0.98);
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }
         .control-group {
             margin: 8px 0;
@@ -52,12 +51,16 @@
             font-size: 10px;
             font-weight: 600;
         }
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
         button {
-            width: 100%;
-            padding: 6px 8px;
-            margin: 3px 0;
+            padding: 8px 10px;
             border: none;
-            border-radius: 4px;
+            border-radius: 5px;
             background: #2a5298;
             color: white;
             cursor: pointer;
@@ -78,18 +81,28 @@
             align-items: center;
             gap: 6px;
             margin: 6px 0;
+            padding: 6px;
+            background: rgba(42, 82, 152, 0.1);
+            border-radius: 5px;
         }
         input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
+            width: 16px;
+            height: 16px;
             cursor: pointer;
+        }
+        .checkbox-group label {
+            margin: 0;
+            flex: 1;
+            font-size: 10px;
         }
         .bg-toggle {
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin: 8px 0;
-            padding: 6px 0;
+            padding: 8px;
+            background: rgba(42, 82, 152, 0.1);
+            border-radius: 5px;
         }
         .bg-toggle-label {
             font-size: 10px;
@@ -99,8 +112,8 @@
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 40px;
-            height: 20px;
+            width: 45px;
+            height: 22px;
         }
         .toggle-switch input {
             opacity: 0;
@@ -116,15 +129,15 @@
             bottom: 0;
             background-color: #ccc;
             transition: .4s;
-            border-radius: 20px;
+            border-radius: 22px;
         }
         .toggle-slider:before {
             position: absolute;
             content: "";
             height: 16px;
             width: 16px;
-            left: 2px;
-            bottom: 2px;
+            left: 3px;
+            bottom: 3px;
             background-color: white;
             transition: .4s;
             border-radius: 50%;
@@ -133,12 +146,13 @@
             background-color: #2a5298;
         }
         input:checked + .toggle-slider:before {
-            transform: translateX(20px);
+            transform: translateX(23px);
         }
         .zoom-controls {
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+            margin-top: 8px;
+            padding: 8px;
+            background: rgba(42, 82, 152, 0.1);
+            border-radius: 5px;
         }
         .zoom-slider-container {
             display: flex;
@@ -148,92 +162,63 @@
         }
         .zoom-slider {
             flex: 1;
-            height: 4px;
+            height: 5px;
             -webkit-appearance: none;
             background: #ddd;
-            border-radius: 2px;
+            border-radius: 3px;
             outline: none;
         }
         .zoom-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: #2a5298;
             cursor: pointer;
             border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .zoom-slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
+            width: 18px;
+            height: 18px;
             border-radius: 50%;
             background: #2a5298;
             cursor: pointer;
             border: 2px solid white;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .zoom-value {
             font-size: 10px;
             color: #333;
-            font-weight: 600;
-            min-width: 30px;
+            font-weight: 700;
+            min-width: 35px;
             text-align: center;
+            background: white;
+            padding: 3px 6px;
+            border-radius: 3px;
         }
         .zoom-buttons {
-            display: flex;
-            gap: 5px;
-            margin-top: 5px;
-        }
-        .zoom-buttons button {
-            flex: 1;
-            padding: 4px 6px;
-            font-size: 9px;
-        }
-        .info {
-            position: absolute;
-            bottom: 10px;
-            right: 10px;
-            background: rgba(255, 255, 255, 0.9);
-            padding: 10px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-            font-size: 10px;
-            color: #333;
-            max-width: 180px;
-            z-index: 100;
-        }
-        .white-bg .info {
-            background: rgba(255, 255, 255, 0.95);
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            border: 1px solid #eee;
-        }
-        .info h4 {
-            margin: 0 0 8px 0;
-            color: #1e3c72;
-            font-size: 12px;
-        }
-        .info p {
-            margin: 3px 0;
-            line-height: 1.4;
-        }
-        @media (max-width: 768px) {
-            .controls { top: 5px; right: 5px; max-width: 140px; padding: 8px; font-size: 9px; }
-            .controls h3 { font-size: 11px; margin-bottom: 6px; }
-            button { padding: 5px 6px; font-size: 9px; margin: 2px 0; }
-            .info { display: none; }
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin-top: 6px;
         }
     </style>
 </head>
 <body>
+    <div id="canvas-container"></div>
+    
     <div class="controls">
-        <h3>Управление 3D моделью</h3>
         <div class="control-group">
-            <button id="showAll">Показать всё</button>
-            <button id="showTubes">Трубы</button>
-            <button id="showCaps">Заглушки</button>
-            <button id="showCapsule">Капсула ингибитора</button>
+            <label>Показать компоненты:</label>
+            <div class="button-grid">
+                <button id="showAll">Всё</button>
+                <button id="showTubes">Трубы</button>
+                <button id="showCaps">Заглушки</button>
+                <button id="showCapsule">Капсула</button>
+            </div>
         </div>
+        
         <div class="control-group">
             <div class="checkbox-group">
                 <input type="checkbox" id="toggleConnectors" checked>
@@ -244,38 +229,32 @@
                 <label for="toggleRotation">Авто-вращение</label>
             </div>
         </div>
-        <div class="control-group">
-            <div class="bg-toggle">
-                <span class="bg-toggle-label">Белый фон</span>
-                <label class="toggle-switch">
-                    <input type="checkbox" id="toggleBackground">
-                    <span class="toggle-slider"></span>
-                </label>
-            </div>
+        
+        <div class="bg-toggle">
+            <span class="bg-toggle-label">Белый фон</span>
+            <label class="toggle-switch">
+                <input type="checkbox" id="toggleBackground">
+                <span class="toggle-slider"></span>
+            </label>
         </div>
-        <div class="control-group zoom-controls">
-            <label for="zoomSlider">Масштаб:</label>
+        
+        <div class="zoom-controls">
+            <label>Масштаб:</label>
             <div class="zoom-slider-container">
                 <input type="range" id="zoomSlider" class="zoom-slider" min="100" max="4000" value="1200" step="50">
                 <span id="zoomValue" class="zoom-value">1200</span>
             </div>
             <div class="zoom-buttons">
-                <button id="zoomIn">+ Приблизить</button>
-                <button id="zoomOut">- Отдалить</button>
+                <button id="zoomIn">➕ Приблизить</button>
+                <button id="zoomOut">➖ Отдалить</button>
             </div>
         </div>
+        
         <div class="control-group">
-            <button id="resetView">Сбросить камеру</button>
+            <button id="resetView" style="width: 100%;">🔄 Сбросить камеру</button>
         </div>
     </div>
-    <div class="info">
-        <h4>Технические характеристики</h4>
-        <p><strong>Трубы:</strong> 5x DN80, длина 1,5м, стенка 3мм</p>
-        <p><strong>Кольца:</strong> 2x DN200, стенка 10мм</p>
-        <p><strong>Резьба:</strong> 10мм на концах труб</p>
-        <p><strong>Капсула:</strong> DN50, помещается внутрь</p>
-        <p><strong>Отверстия:</strong> По 2 на трубу для прохода ингибитора</p>
-    </div>
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let scene, camera, renderer, tubeGroup, capsGroup, connectorGroup, autoRotate = true;
@@ -286,19 +265,30 @@
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a2e);
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 5000);
+            
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            
+            camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
             camera.position.set(800, 600, 1200);
             camera.lookAt(0, 0, 0);
+            
             renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(width, height);
             renderer.shadowMap.enabled = true;
-            document.body.appendChild(renderer.domElement);
+            container.appendChild(renderer.domElement);
+            
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const dl1 = new THREE.DirectionalLight(0xffffff, 0.8);
             dl1.position.set(500, 800, 600);
             scene.add(dl1);
-            scene.add(new THREE.DirectionalLight(0xffffff, 0.4).translateX(-500).translateY(400).translateZ(-600));
+            const dl2 = new THREE.DirectionalLight(0xffffff, 0.4);
+            dl2.position.set(-500, 400, -600);
+            scene.add(dl2);
+            
             createModel();
+            
             renderer.domElement.addEventListener('mousedown', onMouseDown);
             renderer.domElement.addEventListener('mousemove', onMouseMove);
             renderer.domElement.addEventListener('mouseup', () => isDragging = false);
@@ -308,6 +298,7 @@
             renderer.domElement.addEventListener('touchmove', onTouchMove);
             renderer.domElement.addEventListener('touchend', () => isDragging = false);
             window.addEventListener('resize', onWindowResize);
+            
             document.getElementById('showAll').addEventListener('click', () => showView('all'));
             document.getElementById('showTubes').addEventListener('click', () => showView('tubes'));
             document.getElementById('showCaps').addEventListener('click', () => showView('caps'));
@@ -319,10 +310,12 @@
                 if (e.target.checked) { document.body.classList.add('white-bg'); scene.background = new THREE.Color(0xffffff); }
                 else { document.body.classList.remove('white-bg'); scene.background = new THREE.Color(0x1a1a2e); }
             });
+            
             const zs = document.getElementById('zoomSlider'), zv = document.getElementById('zoomValue');
             zs.addEventListener('input', (e) => { zoomLevel = parseInt(e.target.value); updateZoom(); zv.textContent = zoomLevel; });
             document.getElementById('zoomIn').addEventListener('click', () => { zoomLevel = Math.max(minZoom, zoomLevel - zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel; });
             document.getElementById('zoomOut').addEventListener('click', () => { zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel; });
+            
             animate();
         }
         
@@ -346,21 +339,22 @@
             const connMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.9, roughness: 0.2 });
             const capMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.85, roughness: 0.25 });
             const thrMat = new THREE.MeshStandardMaterial({ color: 0x606060, metalness: 0.7, roughness: 0.4 });
+            
             tubeGroup = new THREE.Group();
             capsGroup = new THREE.Group();
             connectorGroup = new THREE.Group();
+            
             const tLen = 1500, oRad = 44.45, iRad = 41.45, angleStep = Math.PI * 2 / 5, cRad = oRad * 2.2;
             
             for (let i = 0; i < 5; i++) {
                 const ang = i * angleStep, x = Math.cos(ang) * cRad, y = Math.sin(ang) * cRad;
-                const tGeo = new THREE.CylinderGeometry(oRad, oRad, tLen, 32, 1, true);
-                const tube = new THREE.Mesh(tGeo, tubeMat);
+                const tube = new THREE.Mesh(new THREE.CylinderGeometry(oRad, oRad, tLen, 32, 1, true), tubeMat);
                 tube.rotation.z = Math.PI / 2;
                 tube.position.set(0, x, y);
                 tube.castShadow = true;
                 tubeGroup.add(tube);
-                const iGeo = new THREE.CylinderGeometry(iRad, iRad, tLen, 32, 1, true);
-                const inner = new THREE.Mesh(iGeo, new THREE.MeshStandardMaterial({ color: 0x0a0a0a, side: THREE.BackSide, metalness: 0.3, roughness: 0.8 }));
+                
+                const inner = new THREE.Mesh(new THREE.CylinderGeometry(iRad, iRad, tLen, 32, 1, true), new THREE.MeshStandardMaterial({ color: 0x0a0a0a, side: THREE.BackSide, metalness: 0.3, roughness: 0.8 }));
                 inner.rotation.z = Math.PI / 2;
                 inner.position.set(0, x, y);
                 tubeGroup.add(inner);
@@ -420,74 +414,36 @@
                 ct2.position.x = tLen/2+27.5;
                 capsGroup.add(ct2);
                 
-                // Create actual holes through the tube wall for inhibitor to flow out
-                const holeRad = 6;
-                const holeDepth = 10;
-                const holeMat = new THREE.MeshStandardMaterial({ 
-                    color: 0x0a0a0a, 
-                    metalness: 0.3, 
-                    roughness: 0.9,
-                    side: THREE.DoubleSide 
-                });
-                
+                const holeMat = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, metalness: 0.3, roughness: 0.9, side: THREE.DoubleSide });
                 for (let holePos of [-tLen/2+50, tLen/2-50]) {
-                    // Create a cylinder for the hole
-                    const hole = new THREE.Mesh(
-                        new THREE.CylinderGeometry(holeRad, holeRad, holeDepth, 16),
-                        holeMat
-                    );
-                    
-                    // Position hole pointing radially outward from tube
-                    const holeX = Math.cos(ang);
-                    const holeY = Math.sin(ang);
+                    const hole = new THREE.Mesh(new THREE.CylinderGeometry(6, 6, 10, 16), holeMat);
+                    const holeX = Math.cos(ang), holeY = Math.sin(ang);
                     hole.position.set(holePos, x + holeX * oRad, y + holeY * oRad);
                     hole.rotation.z = -ang + Math.PI/2;
                     hole.rotation.x = Math.PI/2;
                     tubeGroup.add(hole);
-                    
-                    // Add ring around hole for detail
-                    const holeRing = new THREE.Mesh(
-                        new THREE.TorusGeometry(holeRad + 1, 0.8, 8, 16),
-                        tubeMat
-                    );
+                    const holeRing = new THREE.Mesh(new THREE.TorusGeometry(7, 0.8, 8, 16), tubeMat);
                     holeRing.position.copy(hole.position);
                     holeRing.rotation.copy(hole.rotation);
                     tubeGroup.add(holeRing);
                 }
             }
             
-            // Create 2 large rings that wrap around all 5 tubes like rubber bands
+            // Add rings back (without the center wedges)
             const ringMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.4 });
-            
-            // Calculate the outer radius that encompasses all tubes
-            const ringRadius = cRad + oRad + 15;
-            const ringWidth = 40;
-            const ringThickness = 8;
+            const ringRadius = cRad + oRad + 15, ringWidth = 40, ringThickness = 8;
             
             for (let posX of [-tLen/2+100, tLen/2-100]) {
-                // Create ring with rectangular cross-section using a thin torus
                 const ringShape = new THREE.Shape();
                 ringShape.absarc(0, 0, ringRadius, 0, Math.PI * 2, false);
                 const holePath = new THREE.Path();
                 holePath.absarc(0, 0, ringRadius - ringThickness, 0, Math.PI * 2, true);
                 ringShape.holes.push(holePath);
                 
-                const extrudeSettings = {
-                    depth: ringWidth,
-                    bevelEnabled: true,
-                    bevelThickness: 2,
-                    bevelSize: 2,
-                    bevelSegments: 3
-                };
-                
-                const ring = new THREE.Mesh(
-                    new THREE.ExtrudeGeometry(ringShape, extrudeSettings),
-                    ringMat
-                );
+                const ring = new THREE.Mesh(new THREE.ExtrudeGeometry(ringShape, { depth: ringWidth, bevelEnabled: true, bevelThickness: 2, bevelSize: 2, bevelSegments: 3 }), ringMat);
                 ring.rotation.y = Math.PI / 2;
                 ring.position.x = posX - ringWidth/2;
                 ring.castShadow = true;
-                ring.receiveShadow = true;
                 connectorGroup.add(ring);
             }
             
@@ -575,9 +531,12 @@
         }
         
         function onWindowResize() {
-            camera.aspect = window.innerWidth / window.innerHeight;
+            const container = document.getElementById('canvas-container');
+            const width = container.clientWidth;
+            const height = container.clientHeight;
+            camera.aspect = width / height;
             camera.updateProjectionMatrix();
-            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setSize(width, height);
         }
         
         function animate() {
