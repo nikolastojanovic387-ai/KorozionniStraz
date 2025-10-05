@@ -302,7 +302,11 @@
             renderer.domElement.addEventListener('mousedown', onMouseDown);
             renderer.domElement.addEventListener('mousemove', onMouseMove);
             renderer.domElement.addEventListener('mouseup', () => isDragging = false);
+            renderer.domElement.addEventListener('mouseleave', () => isDragging = false);
             renderer.domElement.addEventListener('wheel', onMouseWheel);
+            renderer.domElement.addEventListener('touchstart', onTouchStart);
+            renderer.domElement.addEventListener('touchmove', onTouchMove);
+            renderer.domElement.addEventListener('touchend', () => isDragging = false);
             window.addEventListener('resize', onWindowResize);
             document.getElementById('showAll').addEventListener('click', () => showView('all'));
             document.getElementById('showTubes').addEventListener('click', () => showView('tubes'));
@@ -508,7 +512,7 @@
             e2.rotation.z = Math.PI/2;
             e2.position.x = 100;
             capGrp.add(e2);
-            capGrp.position.set(400, 200, 0);
+            capGrp.position.set(0, 0, 0);
             capGrp.visible = false;
             
             scene.add(tubeGroup);
@@ -520,10 +524,21 @@
         
         function showView(v) {
             tubeGroup.visible = capsGroup.visible = connectorGroup.visible = window.capsuleGroup.visible = false;
-            if (v === 'all') { tubeGroup.visible = capsGroup.visible = true; connectorGroup.visible = document.getElementById('toggleConnectors').checked; }
-            else if (v === 'tubes') { tubeGroup.visible = true; connectorGroup.visible = document.getElementById('toggleConnectors').checked; }
+            capsuleManualRotation = false;
+            if (v === 'all') { 
+                tubeGroup.visible = capsGroup.visible = true; 
+                connectorGroup.visible = document.getElementById('toggleConnectors').checked; 
+            }
+            else if (v === 'tubes') { 
+                tubeGroup.visible = true; 
+                connectorGroup.visible = document.getElementById('toggleConnectors').checked; 
+            }
             else if (v === 'caps') capsGroup.visible = true;
-            else if (v === 'capsule') window.capsuleGroup.visible = true;
+            else if (v === 'capsule') { 
+                window.capsuleGroup.visible = true;
+                window.capsuleGroup.position.set(0, 0, 0);
+                window.capsuleGroup.rotation.set(0, 0, 0);
+            }
         }
         
         function resetCamera() {
@@ -542,6 +557,23 @@
                 previousMousePosition = { x: e.clientX, y: e.clientY };
             }
         }
+        
+        function onTouchStart(e) {
+            if (e.touches.length === 1) {
+                isDragging = true;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        }
+        
+        function onTouchMove(e) {
+            if (isDragging && e.touches.length === 1) {
+                e.preventDefault();
+                rotation.y += (e.touches[0].clientX - previousMousePosition.x) * 0.005;
+                rotation.x += (e.touches[0].clientY - previousMousePosition.y) * 0.005;
+                previousMousePosition = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+            }
+        }
+        
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
@@ -550,10 +582,20 @@
         
         function animate() {
             requestAnimationFrame(animate);
-            if (autoRotate && !isDragging) { rotation.x += 0.001; rotation.y += 0.0015; }
+            if (autoRotate && !isDragging && !window.capsuleGroup.visible) { 
+                rotation.x += 0.001; 
+                rotation.y += 0.0015; 
+            }
             tubeGroup.rotation.x = capsGroup.rotation.x = connectorGroup.rotation.x = rotation.x;
             tubeGroup.rotation.y = capsGroup.rotation.y = connectorGroup.rotation.y = rotation.y;
-            if (window.capsuleGroup && window.capsuleGroup.visible) window.capsuleGroup.rotation.y += 0.005;
+            if (window.capsuleGroup && window.capsuleGroup.visible) {
+                if (isDragging) {
+                    window.capsuleGroup.rotation.y = rotation.y * 2;
+                    window.capsuleGroup.rotation.x = rotation.x * 2;
+                } else if (autoRotate) {
+                    window.capsuleGroup.rotation.y += 0.005;
+                }
+            }
             renderer.render(scene, camera);
         }
         
