@@ -73,12 +73,6 @@
         button:active {
             transform: translateY(0);
         }
-        .white-bg button {
-            background: #2a5298;
-        }
-        .white-bg button:hover {
-            background: #1e3c72;
-        }
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -90,8 +84,6 @@
             height: 14px;
             cursor: pointer;
         }
-        
-        /* Background toggle switch */
         .bg-toggle {
             display: flex;
             align-items: center;
@@ -143,8 +135,6 @@
         input:checked + .toggle-slider:before {
             transform: translateX(20px);
         }
-        
-        /* Zoom controls */
         .zoom-controls {
             margin-top: 10px;
             padding-top: 10px;
@@ -200,7 +190,6 @@
             padding: 4px 6px;
             font-size: 9px;
         }
-        
         .info {
             position: absolute;
             bottom: 10px;
@@ -224,83 +213,15 @@
             color: #1e3c72;
             font-size: 12px;
         }
-        .white-bg .info h4 {
-            color: #2a5298;
-        }
         .info p {
             margin: 3px 0;
             line-height: 1.4;
         }
-        
         @media (max-width: 768px) {
-            .controls {
-                top: 5px;
-                right: 5px;
-                left: auto;
-                max-width: 140px;
-                padding: 8px;
-                font-size: 9px;
-            }
-            .controls h3 {
-                font-size: 11px;
-                margin-bottom: 6px;
-            }
-            button {
-                padding: 5px 6px;
-                font-size: 9px;
-                margin: 2px 0;
-            }
-            .control-group label {
-                font-size: 9px;
-            }
-            input[type="checkbox"] {
-                width: 12px;
-                height: 12px;
-            }
-            .bg-toggle {
-                margin: 6px 0;
-                padding: 4px 0;
-            }
-            .bg-toggle-label {
-                font-size: 9px;
-            }
-            .toggle-switch {
-                width: 36px;
-                height: 18px;
-            }
-            .toggle-slider:before {
-                height: 14px;
-                width: 14px;
-                left: 2px;
-                bottom: 2px;
-            }
-            input:checked + .toggle-slider:before {
-                transform: translateX(18px);
-            }
-            .zoom-slider-container {
-                gap: 6px;
-            }
-            .zoom-slider {
-                height: 3px;
-            }
-            .zoom-slider::-webkit-slider-thumb {
-                width: 14px;
-                height: 14px;
-            }
-            .zoom-value {
-                font-size: 9px;
-                min-width: 25px;
-            }
-            .info {
-                display: none;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .controls {
-                max-width: 120px;
-                padding: 6px;
-            }
+            .controls { top: 5px; right: 5px; max-width: 140px; padding: 8px; font-size: 9px; }
+            .controls h3 { font-size: 11px; margin-bottom: 6px; }
+            button { padding: 5px 6px; font-size: 9px; margin: 2px 0; }
+            .info { display: none; }
         }
     </style>
 </head>
@@ -323,8 +244,6 @@
                 <label for="toggleRotation">Авто-вращение</label>
             </div>
         </div>
-        
-        <!-- Background Toggle -->
         <div class="control-group">
             <div class="bg-toggle">
                 <span class="bg-toggle-label">Белый фон</span>
@@ -334,8 +253,6 @@
                 </label>
             </div>
         </div>
-        
-        <!-- Zoom Controls -->
         <div class="control-group zoom-controls">
             <label for="zoomSlider">Масштаб:</label>
             <div class="zoom-slider-container">
@@ -347,12 +264,10 @@
                 <button id="zoomOut">- Отдалить</button>
             </div>
         </div>
-        
         <div class="control-group">
             <button id="resetView">Сбросить камеру</button>
         </div>
     </div>
-    
     <div class="info">
         <h4>Технические характеристики</h4>
         <p><strong>Трубы:</strong> 5x DN80, длина 1,5м, стенка 3мм</p>
@@ -360,666 +275,285 @@
         <p><strong>Резьба:</strong> 10мм на концах труб</p>
         <p><strong>Капсула:</strong> DN50, помещается внутрь</p>
         <p><strong>Отверстия:</strong> По 2 на трубу для прохода ингибитора</p>
-        <p><strong>Применение:</strong> Система подачи твердого ингибитора</p>
     </div>
-
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
         let scene, camera, renderer, tubeGroup, capsGroup, connectorGroup, autoRotate = true;
-        let isDragging = false;
-        let previousMousePosition = { x: 0, y: 0 };
-        let rotation = { x: 0, y: 0 };
-        let capsuleManualRotation = false;
-        
-        // Zoom variables - Increased max zoom 4x (from 2000 to 4000)
-        let zoomLevel = 1200;
-        const minZoom = 100;
-        const maxZoom = 4000; // Changed from 2000 to 4000 (4x more zoom out)
-        const zoomStep = 100;
+        let isDragging = false, previousMousePosition = { x: 0, y: 0 }, rotation = { x: 0, y: 0 };
+        let capsuleManualRotation = false, zoomLevel = 1200;
+        const minZoom = 100, maxZoom = 4000, zoomStep = 100;
         
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a2e);
-            
-            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 5000); // Increased far plane
-            
-            if (window.innerWidth < 768) {
-                camera.position.set(600, 400, 1000);
-                zoomLevel = 1000;
-            } else {
-                camera.position.set(800, 600, 1200);
-                zoomLevel = 1200;
-            }
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 5000);
+            camera.position.set(800, 600, 1200);
             camera.lookAt(0, 0, 0);
-            
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(window.innerWidth, window.innerHeight);
             renderer.shadowMap.enabled = true;
-            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.body.appendChild(renderer.domElement);
-            
-            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
-            scene.add(ambientLight);
-            
-            const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
-            directionalLight1.position.set(500, 800, 600);
-            directionalLight1.castShadow = true;
-            scene.add(directionalLight1);
-            
-            const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
-            directionalLight2.position.set(-500, 400, -600);
-            scene.add(directionalLight2);
-            
-            const pointLight = new THREE.PointLight(0x4a90e2, 0.5);
-            pointLight.position.set(0, 500, 800);
-            scene.add(pointLight);
-            
+            scene.add(new THREE.AmbientLight(0xffffff, 0.6));
+            const dl1 = new THREE.DirectionalLight(0xffffff, 0.8);
+            dl1.position.set(500, 800, 600);
+            scene.add(dl1);
+            scene.add(new THREE.DirectionalLight(0xffffff, 0.4).translateX(-500).translateY(400).translateZ(-600));
             createModel();
-            
-            // Event listeners for mouse/touch controls
             renderer.domElement.addEventListener('mousedown', onMouseDown);
             renderer.domElement.addEventListener('mousemove', onMouseMove);
-            renderer.domElement.addEventListener('mouseup', onMouseUp);
-            renderer.domElement.addEventListener('mouseleave', onMouseUp);
-            renderer.domElement.addEventListener('click', onCanvasClick);
+            renderer.domElement.addEventListener('mouseup', () => isDragging = false);
             renderer.domElement.addEventListener('wheel', onMouseWheel);
-            
-            renderer.domElement.addEventListener('touchstart', onTouchStart);
-            renderer.domElement.addEventListener('touchmove', onTouchMove);
-            renderer.domElement.addEventListener('touchend', onTouchEnd);
-            
             window.addEventListener('resize', onWindowResize);
-            
-            // Control event listeners
             document.getElementById('showAll').addEventListener('click', () => showView('all'));
             document.getElementById('showTubes').addEventListener('click', () => showView('tubes'));
             document.getElementById('showCaps').addEventListener('click', () => showView('caps'));
             document.getElementById('showCapsule').addEventListener('click', () => showView('capsule'));
             document.getElementById('resetView').addEventListener('click', resetCamera);
-            document.getElementById('toggleConnectors').addEventListener('change', (e) => {
-                connectorGroup.visible = e.target.checked;
-            });
-            document.getElementById('toggleRotation').addEventListener('change', (e) => {
-                autoRotate = e.target.checked;
-            });
-            
-            // Background toggle event listener
+            document.getElementById('toggleConnectors').addEventListener('change', (e) => { connectorGroup.visible = e.target.checked; });
+            document.getElementById('toggleRotation').addEventListener('change', (e) => { autoRotate = e.target.checked; });
             document.getElementById('toggleBackground').addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    document.body.classList.add('white-bg');
-                    scene.background = new THREE.Color(0xffffff);
-                } else {
-                    document.body.classList.remove('white-bg');
-                    scene.background = new THREE.Color(0x1a1a2e);
-                }
+                if (e.target.checked) { document.body.classList.add('white-bg'); scene.background = new THREE.Color(0xffffff); }
+                else { document.body.classList.remove('white-bg'); scene.background = new THREE.Color(0x1a1a2e); }
             });
-            
-            // Zoom control event listeners
-            const zoomSlider = document.getElementById('zoomSlider');
-            const zoomValue = document.getElementById('zoomValue');
-            const zoomInBtn = document.getElementById('zoomIn');
-            const zoomOutBtn = document.getElementById('zoomOut');
-            
-            zoomSlider.value = zoomLevel;
-            zoomValue.textContent = zoomLevel;
-            
-            zoomSlider.addEventListener('input', (e) => {
-                zoomLevel = parseInt(e.target.value);
-                updateZoom();
-                zoomValue.textContent = zoomLevel;
-            });
-            
-            zoomInBtn.addEventListener('click', () => {
-                zoomLevel = Math.max(minZoom, zoomLevel - zoomStep);
-                updateZoom();
-                zoomSlider.value = zoomLevel;
-                zoomValue.textContent = zoomLevel;
-            });
-            
-            zoomOutBtn.addEventListener('click', () => {
-                zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep);
-                updateZoom();
-                zoomSlider.value = zoomLevel;
-                zoomValue.textContent = zoomLevel;
-            });
-            
+            const zs = document.getElementById('zoomSlider'), zv = document.getElementById('zoomValue');
+            zs.addEventListener('input', (e) => { zoomLevel = parseInt(e.target.value); updateZoom(); zv.textContent = zoomLevel; });
+            document.getElementById('zoomIn').addEventListener('click', () => { zoomLevel = Math.max(minZoom, zoomLevel - zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel; });
+            document.getElementById('zoomOut').addEventListener('click', () => { zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel; });
             animate();
         }
         
         function updateZoom() {
-            // Calculate direction vector from camera to target
-            const direction = new THREE.Vector3();
-            camera.getWorldDirection(direction);
-            direction.normalize();
-            
-            // Move camera along the direction vector based on zoom level
-            const targetPosition = new THREE.Vector3(0, 0, 0);
-            const distance = zoomLevel;
-            
-            camera.position.copy(targetPosition).sub(direction.multiplyScalar(distance));
-            camera.lookAt(targetPosition);
+            const dir = new THREE.Vector3();
+            camera.getWorldDirection(dir).normalize();
+            camera.position.copy(new THREE.Vector3(0,0,0)).sub(dir.multiplyScalar(zoomLevel));
+            camera.lookAt(0,0,0);
         }
         
         function onMouseWheel(e) {
             e.preventDefault();
-            
-            // Adjust zoom level based on wheel direction
-            if (e.deltaY < 0) {
-                // Zoom in
-                zoomLevel = Math.max(minZoom, zoomLevel - zoomStep * 2);
-            } else {
-                // Zoom out
-                zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep * 2);
-            }
-            
-            // Update slider and value display
+            zoomLevel = e.deltaY < 0 ? Math.max(minZoom, zoomLevel - zoomStep * 2) : Math.min(maxZoom, zoomLevel + zoomStep * 2);
             document.getElementById('zoomSlider').value = zoomLevel;
             document.getElementById('zoomValue').textContent = zoomLevel;
-            
             updateZoom();
         }
         
         function createModel() {
-            const tubeMaterial = new THREE.MeshStandardMaterial({
-                color: 0x708090,
-                metalness: 0.8,
-                roughness: 0.3
-            });
-            
-            const connectorMaterial = new THREE.MeshStandardMaterial({
-                color: 0x4a4a4a,
-                metalness: 0.9,
-                roughness: 0.2
-            });
-            
-            const capMaterial = new THREE.MeshStandardMaterial({
-                color: 0x2c3e50,
-                metalness: 0.85,
-                roughness: 0.25
-            });
-            
-            const threadMaterial = new THREE.MeshStandardMaterial({
-                color: 0x606060,
-                metalness: 0.7,
-                roughness: 0.4
-            });
-            
+            const tubeMat = new THREE.MeshStandardMaterial({ color: 0x708090, metalness: 0.8, roughness: 0.3 });
+            const connMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.9, roughness: 0.2 });
+            const capMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.85, roughness: 0.25 });
+            const thrMat = new THREE.MeshStandardMaterial({ color: 0x606060, metalness: 0.7, roughness: 0.4 });
             tubeGroup = new THREE.Group();
             capsGroup = new THREE.Group();
             connectorGroup = new THREE.Group();
-            
-            const tubeLength = 1500;
-            const outerRadius = 88.9 / 2;
-            const innerRadius = (88.9 - 6) / 2;
-            const threadLength = 10;
-            
-            const angleStep = (Math.PI * 2) / 5;
-            const centerRadius = outerRadius * 2.2;
+            const tLen = 1500, oRad = 44.45, iRad = 41.45, angleStep = Math.PI * 2 / 5, cRad = oRad * 2.2;
             
             for (let i = 0; i < 5; i++) {
-                const angle = i * angleStep;
-                const x = Math.cos(angle) * centerRadius;
-                const y = Math.sin(angle) * centerRadius;
-                
-                // Open-ended tube
-                const tubeGeometry = new THREE.CylinderGeometry(
-                    outerRadius, outerRadius, tubeLength, 32, 1, true
-                );
-                const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
+                const ang = i * angleStep, x = Math.cos(ang) * cRad, y = Math.sin(ang) * cRad;
+                const tGeo = new THREE.CylinderGeometry(oRad, oRad, tLen, 32, 1, true);
+                const tube = new THREE.Mesh(tGeo, tubeMat);
                 tube.rotation.z = Math.PI / 2;
                 tube.position.set(0, x, y);
                 tube.castShadow = true;
-                tube.receiveShadow = true;
                 tubeGroup.add(tube);
-                
-                // Inner hollow
-                const innerGeometry = new THREE.CylinderGeometry(
-                    innerRadius, innerRadius, tubeLength, 32, 1, true
-                );
-                const inner = new THREE.Mesh(innerGeometry, new THREE.MeshStandardMaterial({
-                    color: 0x0a0a0a,
-                    side: THREE.BackSide,
-                    metalness: 0.3,
-                    roughness: 0.8
-                }));
+                const iGeo = new THREE.CylinderGeometry(iRad, iRad, tLen, 32, 1, true);
+                const inner = new THREE.Mesh(iGeo, new THREE.MeshStandardMaterial({ color: 0x0a0a0a, side: THREE.BackSide, metalness: 0.3, roughness: 0.8 }));
                 inner.rotation.z = Math.PI / 2;
                 inner.position.set(0, x, y);
                 tubeGroup.add(inner);
                 
-                // Inhibitor capsules inside tube - FIXED: Properly spaced to not go through caps
-                const capsuleInside = new THREE.Group();
-                const capRadius = 50 / 2;
-                const capLength = 180;
-                const capsulesCount = 5; // Reduced to 5 to fit properly
-                
-                for (let k = 0; k < capsulesCount; k++) {
-                    const capsuleGroup = new THREE.Group();
-                    
+                const capsIn = new THREE.Group();
+                for (let k = 0; k < 5; k++) {
+                    const cGrp = new THREE.Group();
                     for (let j = 0; j < 6; j++) {
-                        const segLen = capLength / 6;
-                        const segGeo = new THREE.CylinderGeometry(capRadius, capRadius, segLen, 16);
-                        const segMat = new THREE.MeshStandardMaterial({
-                            color: 0xffd700,
-                            metalness: 0.5,
-                            roughness: 0.4,
-                            emissive: 0x554400,
-                            emissiveIntensity: 0.2
-                        });
-                        const seg = new THREE.Mesh(segGeo, segMat);
+                        const seg = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, 30, 16), new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.5, roughness: 0.4, emissive: 0x554400, emissiveIntensity: 0.2 }));
                         seg.rotation.z = Math.PI / 2;
-                        seg.position.x = -capLength/2 + segLen/2 + j * segLen;
-                        capsuleGroup.add(seg);
+                        seg.position.x = -90 + 15 + j * 30;
+                        cGrp.add(seg);
                     }
-                    
                     for (let j = 0; j < 3; j++) {
-                        const rGeo = new THREE.TorusGeometry(capRadius + 1, 1, 6, 16);
-                        const rMat = new THREE.MeshStandardMaterial({
-                            color: 0x8b7500,
-                            metalness: 0.9,
-                            roughness: 0.1
-                        });
-                        const r = new THREE.Mesh(rGeo, rMat);
+                        const r = new THREE.Mesh(new THREE.TorusGeometry(26, 1, 6, 16), new THREE.MeshStandardMaterial({ color: 0x8b7500, metalness: 0.9, roughness: 0.1 }));
                         r.rotation.y = Math.PI / 2;
-                        r.position.x = -capLength/2 + 30 + j * 60;
-                        capsuleGroup.add(r);
+                        r.position.x = -90 + 30 + j * 60;
+                        cGrp.add(r);
                     }
-                    
-                    const endGeo = new THREE.SphereGeometry(capRadius, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-                    const endMat = new THREE.MeshStandardMaterial({
-                        color: 0xffd700,
-                        metalness: 0.7,
-                        roughness: 0.3
-                    });
-                    
-                    const end1 = new THREE.Mesh(endGeo, endMat);
-                    end1.rotation.z = -Math.PI / 2;
-                    end1.position.x = -capLength/2;
-                    capsuleGroup.add(end1);
-                    
-                    const end2 = new THREE.Mesh(endGeo, endMat);
-                    end2.rotation.z = Math.PI / 2;
-                    end2.position.x = capLength/2;
-                    capsuleGroup.add(end2);
-                    
-                    // FIXED: Position capsules symmetrically without going through caps
-                    const availableLength = tubeLength - 200; // Leave space for caps
-                    const capsuleSpacing = availableLength / (capsulesCount + 1);
-                    const startPos = -tubeLength/2 + 100 + capsuleSpacing;
-                    const capsulePos = startPos + k * capsuleSpacing;
-                    
-                    capsuleGroup.position.set(capsulePos, x, y);
-                    capsuleInside.add(capsuleGroup);
+                    const e1 = new THREE.Mesh(new THREE.SphereGeometry(25, 12, 12, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.7, roughness: 0.3 }));
+                    e1.rotation.z = -Math.PI/2;
+                    e1.position.x = -90;
+                    cGrp.add(e1);
+                    const e2 = e1.clone();
+                    e2.rotation.z = Math.PI/2;
+                    e2.position.x = 90;
+                    cGrp.add(e2);
+                    const avLen = tLen - 200, sp = avLen / 6;
+                    cGrp.position.set(-tLen/2 + 100 + sp + k * sp, x, y);
+                    capsIn.add(cGrp);
                 }
+                tubeGroup.add(capsIn);
                 
-                tubeGroup.add(capsuleInside);
-                
-                // Thread at beginning
                 for (let j = 0; j < 5; j++) {
-                    const threadRing = new THREE.TorusGeometry(outerRadius + 1, 1.5, 8, 16);
-                    const thread1 = new THREE.Mesh(threadRing, threadMaterial);
-                    thread1.rotation.y = Math.PI / 2;
-                    thread1.position.set(-tubeLength/2 + j * 2.5, x, y);
-                    tubeGroup.add(thread1);
+                    const t1 = new THREE.Mesh(new THREE.TorusGeometry(oRad + 1, 1.5, 8, 16), thrMat);
+                    t1.rotation.y = Math.PI / 2;
+                    t1.position.set(-tLen/2 + j * 2.5, x, y);
+                    tubeGroup.add(t1);
+                    const t2 = t1.clone();
+                    t2.position.x = tLen/2 - j * 2.5;
+                    tubeGroup.add(t2);
                 }
                 
-                // Thread at ending
-                for (let j = 0; j < 5; j++) {
-                    const threadRing = new THREE.TorusGeometry(outerRadius + 1, 1.5, 8, 16);
-                    const thread2 = new THREE.Mesh(threadRing, threadMaterial);
-                    thread2.rotation.y = Math.PI / 2;
-                    thread2.position.set(tubeLength/2 - j * 2.5, x, y);
-                    tubeGroup.add(thread2);
-                }
+                const c1 = new THREE.Mesh(new THREE.CylinderGeometry(oRad+3, oRad+3, 15, 32), capMat);
+                c1.rotation.z = Math.PI/2;
+                c1.position.set(-tLen/2-20, x, y);
+                capsGroup.add(c1);
+                const ct1 = new THREE.Mesh(new THREE.CylinderGeometry(0, oRad+3, 10, 32), capMat);
+                ct1.rotation.z = Math.PI/2;
+                ct1.position.set(-tLen/2-27.5, x, y);
+                capsGroup.add(ct1);
+                const c2 = c1.clone();
+                c2.position.x = tLen/2+20;
+                capsGroup.add(c2);
+                const ct2 = ct1.clone();
+                ct2.rotation.z = -Math.PI/2;
+                ct2.position.x = tLen/2+27.5;
+                capsGroup.add(ct2);
                 
-                // Caps
-                const capGeometry = new THREE.CylinderGeometry(
-                    outerRadius + 3, outerRadius + 3, 15, 32
-                );
-                const cap1 = new THREE.Mesh(capGeometry, capMaterial);
-                cap1.rotation.z = Math.PI / 2;
-                cap1.position.set(-tubeLength/2 - 20, x, y);
-                cap1.castShadow = true;
-                capsGroup.add(cap1);
-                
-                const capTopGeometry = new THREE.CylinderGeometry(
-                    0, outerRadius + 3, 10, 32
-                );
-                const capTop1 = new THREE.Mesh(capTopGeometry, capMaterial);
-                capTop1.rotation.z = Math.PI / 2;
-                capTop1.position.set(-tubeLength/2 - 27.5, x, y);
-                capsGroup.add(capTop1);
-                
-                const cap2 = new THREE.Mesh(capGeometry, capMaterial);
-                cap2.rotation.z = Math.PI / 2;
-                cap2.position.set(tubeLength/2 + 20, x, y);
-                cap2.castShadow = true;
-                capsGroup.add(cap2);
-                
-                const capTop2 = new THREE.Mesh(capTopGeometry, capMaterial);
-                capTop2.rotation.z = -Math.PI / 2;
-                capTop2.position.set(tubeLength/2 + 27.5, x, y);
-                capsGroup.add(capTop2);
-                
-                // Holes - simple black circles
-                const holeRadius = 8;
-                const outwardX = Math.cos(angle);
-                const outwardY = Math.sin(angle);
-                
-                const hole1Pos = -tubeLength/2 + 50;
-                const holeGeo = new THREE.CircleGeometry(holeRadius, 16);
-                const holeMat = new THREE.MeshBasicMaterial({
-                    color: 0x000000,
-                    side: THREE.DoubleSide
+                // Create actual holes through the tube wall for inhibitor to flow out
+                const holeRad = 6;
+                const holeDepth = 10;
+                const holeMat = new THREE.MeshStandardMaterial({ 
+                    color: 0x0a0a0a, 
+                    metalness: 0.3, 
+                    roughness: 0.9,
+                    side: THREE.DoubleSide 
                 });
                 
-                const hole1 = new THREE.Mesh(holeGeo, holeMat);
-                hole1.position.set(hole1Pos, x + outwardX * (outerRadius + 0.1), y + outwardY * (outerRadius + 0.1));
-                hole1.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(hole1);
-                
-                const hole2Pos = tubeLength/2 - 50;
-                const hole2 = new THREE.Mesh(holeGeo, holeMat);
-                hole2.position.set(hole2Pos, x + outwardX * (outerRadius + 0.1), y + outwardY * (outerRadius + 0.1));
-                hole2.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(hole2);
-            }
-            
-            // FIXED: Create connector rings with gaps where they pass through tubes
-            const connectorOuterRadius = 200 / 2;
-            const connectorInnerRadius = (200 - 20) / 2;
-            const connectorWidth = 30;
-            
-            function createConnectorRing(radius, width, positionX, isInner = false) {
-                const ringGroup = new THREE.Group();
-                
-                // Define the 5 pipe positions (angles in radians)
-                const pipeAngles = [0, 72, 144, 216, 288].map(deg => deg * Math.PI / 180);
-                const pipeCoverage = Math.PI / 4; // Each pipe covers about 45 degrees
-                
-                // Create ring segments only in the gaps between pipes
-                for (let i = 0; i < 5; i++) {
-                    const gapStartAngle = pipeAngles[i] + pipeCoverage/2;
-                    const gapEndAngle = pipeAngles[(i + 1) % 5] - pipeCoverage/2;
-                    
-                    // Ensure the gap angle is positive
-                    let gapAngle = gapEndAngle - gapStartAngle;
-                    if (gapAngle < 0) {
-                        gapAngle += Math.PI * 2;
-                    }
-                    
-                    // Create segment for this gap
-                    const segmentGeometry = new THREE.TorusGeometry(
-                        radius, width/2, 16, 32, 
-                        gapStartAngle, gapAngle
+                for (let holePos of [-tLen/2+50, tLen/2-50]) {
+                    // Create a cylinder for the hole
+                    const hole = new THREE.Mesh(
+                        new THREE.CylinderGeometry(holeRad, holeRad, holeDepth, 16),
+                        holeMat
                     );
                     
-                    const material = isInner ? 
-                        new THREE.MeshStandardMaterial({
-                            color: 0x2a2a2a,
-                            metalness: 0.9,
-                            roughness: 0.3
-                        }) : connectorMaterial;
+                    // Position hole pointing radially outward from tube
+                    const holeX = Math.cos(ang);
+                    const holeY = Math.sin(ang);
+                    hole.position.set(holePos, x + holeX * oRad, y + holeY * oRad);
+                    hole.rotation.z = -ang + Math.PI/2;
+                    hole.rotation.x = Math.PI/2;
+                    tubeGroup.add(hole);
                     
-                    const segment = new THREE.Mesh(segmentGeometry, material);
-                    segment.rotation.y = Math.PI / 2;
-                    segment.position.x = positionX;
-                    ringGroup.add(segment);
+                    // Add ring around hole for detail
+                    const holeRing = new THREE.Mesh(
+                        new THREE.TorusGeometry(holeRad + 1, 0.8, 8, 16),
+                        tubeMat
+                    );
+                    holeRing.position.copy(hole.position);
+                    holeRing.rotation.copy(hole.rotation);
+                    tubeGroup.add(holeRing);
                 }
-                
-                return ringGroup;
             }
             
-            // Create outer connector rings (the big black rings)
-            const outerRing1 = createConnectorRing(connectorOuterRadius, connectorWidth, -tubeLength/2 + 100);
-            connectorGroup.add(outerRing1);
+            // Create 2 large rings that wrap around all 5 tubes like rubber bands
+            const ringMat = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.7, roughness: 0.4 });
             
-            const outerRing2 = createConnectorRing(connectorOuterRadius, connectorWidth, tubeLength/2 - 100);
-            connectorGroup.add(outerRing2);
+            // Calculate the outer radius that encompasses all tubes
+            const ringRadius = cRad + oRad + 15;
+            const ringWidth = 40;
+            const ringThickness = 8;
             
-            // Create inner connector rings
-            const innerRing1 = createConnectorRing(connectorInnerRadius, connectorWidth/2 - 2, -tubeLength/2 + 100, true);
-            connectorGroup.add(innerRing1);
-            
-            const innerRing2 = createConnectorRing(connectorInnerRadius, connectorWidth/2 - 2, tubeLength/2 - 100, true);
-            connectorGroup.add(innerRing2);
-            
-            // Separate capsule display
-            const capsuleGroup = new THREE.Group();
-            const capsuleRadius = 50 / 2;
-            const capsuleLength = 200;
-            
-            for (let i = 0; i < 8; i++) {
-                const segmentLength = capsuleLength / 8;
-                const segmentMaterial = new THREE.MeshStandardMaterial({
-                    color: 0xffd700,
-                    metalness: 0.5,
-                    roughness: 0.4,
-                    emissive: 0x554400,
-                    emissiveIntensity: 0.3
-                });
+            for (let posX of [-tLen/2+100, tLen/2-100]) {
+                // Create ring with rectangular cross-section using a thin torus
+                const ringShape = new THREE.Shape();
+                ringShape.absarc(0, 0, ringRadius, 0, Math.PI * 2, false);
+                const holePath = new THREE.Path();
+                holePath.absarc(0, 0, ringRadius - ringThickness, 0, Math.PI * 2, true);
+                ringShape.holes.push(holePath);
                 
-                const segmentGeometry = new THREE.CylinderGeometry(
-                    capsuleRadius, capsuleRadius, segmentLength, 24
+                const extrudeSettings = {
+                    depth: ringWidth,
+                    bevelEnabled: true,
+                    bevelThickness: 2,
+                    bevelSize: 2,
+                    bevelSegments: 3
+                };
+                
+                const ring = new THREE.Mesh(
+                    new THREE.ExtrudeGeometry(ringShape, extrudeSettings),
+                    ringMat
                 );
-                const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
-                segment.rotation.z = Math.PI / 2;
-                segment.position.x = -capsuleLength/2 + segmentLength/2 + i * segmentLength;
-                segment.castShadow = true;
-                capsuleGroup.add(segment);
-            }
-            
-            for (let i = 0; i < 4; i++) {
-                const ringGeometry = new THREE.TorusGeometry(capsuleRadius + 2, 1.5, 8, 24);
-                const ringMaterial = new THREE.MeshStandardMaterial({
-                    color: 0x8b7500,
-                    metalness: 0.9,
-                    roughness: 0.1
-                });
-                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
                 ring.rotation.y = Math.PI / 2;
-                ring.position.x = -capsuleLength/2 + 30 + i * 50;
-                capsuleGroup.add(ring);
+                ring.position.x = posX - ringWidth/2;
+                ring.castShadow = true;
+                ring.receiveShadow = true;
+                connectorGroup.add(ring);
             }
             
-            const endCapGeometry = new THREE.SphereGeometry(capsuleRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-            const endCapMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffd700,
-                metalness: 0.7,
-                roughness: 0.3
-            });
-            
-            const capsuleEnd1 = new THREE.Mesh(endCapGeometry, endCapMaterial);
-            capsuleEnd1.rotation.z = -Math.PI / 2;
-            capsuleEnd1.position.x = -capsuleLength/2;
-            capsuleGroup.add(capsuleEnd1);
-            
-            const capsuleEnd2 = new THREE.Mesh(endCapGeometry, endCapMaterial);
-            capsuleEnd2.rotation.z = Math.PI / 2;
-            capsuleEnd2.position.x = capsuleLength/2;
-            capsuleGroup.add(capsuleEnd2);
-            
-            capsuleGroup.position.set(400, 200, 0);
-            capsuleGroup.visible = false;
-            
-            const labelGeometry = new THREE.PlaneGeometry(150, 40);
-            const canvas = document.createElement('canvas');
-            canvas.width = 256;
-            canvas.height = 64;
-            const ctx = canvas.getContext('2d');
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, 256, 64);
-            ctx.fillStyle = '#1e3c72';
-            ctx.font = 'bold 20px Arial';
-            ctx.textAlign = 'center';
-            ctx.fillText('Капсула DN50', 128, 28);
-            ctx.fillText('с ингибитором', 128, 50);
-            const texture = new THREE.CanvasTexture(canvas);
-            const labelMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-            const infoLabel = new THREE.Mesh(labelGeometry, labelMaterial);
-            infoLabel.position.set(0, -100, 0);
-            capsuleGroup.add(infoLabel);
+            const capGrp = new THREE.Group();
+            for (let i = 0; i < 8; i++) {
+                const seg = new THREE.Mesh(new THREE.CylinderGeometry(25, 25, 25, 24), new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.5, roughness: 0.4, emissive: 0x554400, emissiveIntensity: 0.3 }));
+                seg.rotation.z = Math.PI/2;
+                seg.position.x = -100 + 12.5 + i * 25;
+                capGrp.add(seg);
+            }
+            for (let i = 0; i < 4; i++) {
+                const r = new THREE.Mesh(new THREE.TorusGeometry(27, 1.5, 8, 24), new THREE.MeshStandardMaterial({ color: 0x8b7500, metalness: 0.9, roughness: 0.1 }));
+                r.rotation.y = Math.PI/2;
+                r.position.x = -70 + i * 50;
+                capGrp.add(r);
+            }
+            const e1 = new THREE.Mesh(new THREE.SphereGeometry(25, 16, 16, 0, Math.PI*2, 0, Math.PI/2), new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.7, roughness: 0.3 }));
+            e1.rotation.z = -Math.PI/2;
+            e1.position.x = -100;
+            capGrp.add(e1);
+            const e2 = e1.clone();
+            e2.rotation.z = Math.PI/2;
+            e2.position.x = 100;
+            capGrp.add(e2);
+            capGrp.position.set(400, 200, 0);
+            capGrp.visible = false;
             
             scene.add(tubeGroup);
             scene.add(capsGroup);
             scene.add(connectorGroup);
-            scene.add(capsuleGroup);
-            
-            window.capsuleGroup = capsuleGroup;
+            scene.add(capGrp);
+            window.capsuleGroup = capGrp;
         }
         
-        function showView(view) {
-            tubeGroup.visible = false;
-            capsGroup.visible = false;
-            connectorGroup.visible = false;
-            window.capsuleGroup.visible = false;
-            
-            tubeGroup.position.set(0, 0, 0);
-            capsGroup.position.set(0, 0, 0);
-            connectorGroup.position.set(0, 0, 0);
-            
-            switch(view) {
-                case 'all':
-                    tubeGroup.visible = true;
-                    capsGroup.visible = true;
-                    connectorGroup.visible = document.getElementById('toggleConnectors').checked;
-                    break;
-                case 'tubes':
-                    tubeGroup.visible = true;
-                    connectorGroup.visible = document.getElementById('toggleConnectors').checked;
-                    break;
-                case 'caps':
-                    capsGroup.visible = true;
-                    break;
-                case 'capsule':
-                    window.capsuleGroup.visible = true;
-                    window.capsuleGroup.position.set(0, 0, 0);
-                    break;
-            }
+        function showView(v) {
+            tubeGroup.visible = capsGroup.visible = connectorGroup.visible = window.capsuleGroup.visible = false;
+            if (v === 'all') { tubeGroup.visible = capsGroup.visible = true; connectorGroup.visible = document.getElementById('toggleConnectors').checked; }
+            else if (v === 'tubes') { tubeGroup.visible = true; connectorGroup.visible = document.getElementById('toggleConnectors').checked; }
+            else if (v === 'caps') capsGroup.visible = true;
+            else if (v === 'capsule') window.capsuleGroup.visible = true;
         }
         
         function resetCamera() {
-            if (window.innerWidth < 768) {
-                zoomLevel = 1000;
-            } else {
-                zoomLevel = 1200;
-            }
-            
-            // Update slider and value display
+            zoomLevel = 1200;
             document.getElementById('zoomSlider').value = zoomLevel;
             document.getElementById('zoomValue').textContent = zoomLevel;
-            
             updateZoom();
-            rotation.x = 0;
-            rotation.y = 0;
+            rotation.x = rotation.y = 0;
         }
         
-        function onMouseDown(e) {
-            isDragging = true;
-            previousMousePosition = {
-                x: e.clientX,
-                y: e.clientY
-            };
-        }
-        
-        function onCanvasClick(e) {
-            if (window.capsuleGroup && window.capsuleGroup.visible) {
-                capsuleManualRotation = !capsuleManualRotation;
-            }
-        }
-        
+        function onMouseDown(e) { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; }
         function onMouseMove(e) {
             if (isDragging) {
-                const deltaMove = {
-                    x: e.clientX - previousMousePosition.x,
-                    y: e.clientY - previousMousePosition.y
-                };
-                
-                rotation.y += deltaMove.x * 0.005;
-                rotation.x += deltaMove.y * 0.005;
-                
-                previousMousePosition = {
-                    x: e.clientX,
-                    y: e.clientY
-                };
+                rotation.y += (e.clientX - previousMousePosition.x) * 0.005;
+                rotation.x += (e.clientY - previousMousePosition.y) * 0.005;
+                previousMousePosition = { x: e.clientX, y: e.clientY };
             }
         }
-        
-        function onMouseUp() {
-            isDragging = false;
-        }
-        
-        function onTouchStart(e) {
-            if (e.touches.length === 1) {
-                isDragging = true;
-                previousMousePosition = {
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY
-                };
-            }
-        }
-        
-        function onTouchMove(e) {
-            if (isDragging && e.touches.length === 1) {
-                e.preventDefault();
-                const deltaMove = {
-                    x: e.touches[0].clientX - previousMousePosition.x,
-                    y: e.touches[0].clientY - previousMousePosition.y
-                };
-                
-                rotation.y += deltaMove.x * 0.005;
-                rotation.x += deltaMove.y * 0.005;
-                
-                previousMousePosition = {
-                    x: e.touches[0].clientX,
-                    y: e.touches[0].clientY
-                };
-            }
-        }
-        
-        function onTouchEnd() {
-            isDragging = false;
-        }
-        
         function onWindowResize() {
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
-            
-            if (window.innerWidth < 768) {
-                zoomLevel = 1000;
-            } else {
-                zoomLevel = 1200;
-            }
-            
-            updateZoom();
         }
         
         function animate() {
             requestAnimationFrame(animate);
-            
-            if (autoRotate && !isDragging) {
-                rotation.x += 0.001;
-                rotation.y += 0.0015;
-            }
-            
-            tubeGroup.rotation.x = rotation.x;
-            tubeGroup.rotation.y = rotation.y;
-            capsGroup.rotation.x = rotation.x;
-            capsGroup.rotation.y = rotation.y;
-            connectorGroup.rotation.x = rotation.x;
-            connectorGroup.rotation.y = rotation.y;
-            
-            if (window.capsuleGroup && window.capsuleGroup.visible) {
-                if (!capsuleManualRotation) {
-                    window.capsuleGroup.rotation.y += 0.005;
-                } else {
-                    if (isDragging) {
-                        window.capsuleGroup.rotation.y = rotation.y * 2;
-                        window.capsuleGroup.rotation.x = rotation.x * 2;
-                    }
-                }
-            }
-            
+            if (autoRotate && !isDragging) { rotation.x += 0.001; rotation.y += 0.0015; }
+            tubeGroup.rotation.x = capsGroup.rotation.x = connectorGroup.rotation.x = rotation.x;
+            tubeGroup.rotation.y = capsGroup.rotation.y = connectorGroup.rotation.y = rotation.y;
+            if (window.capsuleGroup && window.capsuleGroup.visible) window.capsuleGroup.rotation.y += 0.005;
             renderer.render(scene, camera);
         }
         
