@@ -24,6 +24,7 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.2);
             max-width: 180px;
             font-size: 11px;
+            z-index: 100;
         }
         .controls h3 {
             margin: 0 0 10px 0;
@@ -83,6 +84,7 @@
             font-size: 10px;
             color: #333;
             max-width: 180px;
+            z-index: 100;
         }
         .info h4 {
             margin: 0 0 8px 0;
@@ -93,6 +95,43 @@
             margin: 3px 0;
             line-height: 1.4;
         }
+        
+        @media (max-width: 768px) {
+            .controls {
+                top: 5px;
+                right: 5px;
+                left: auto;
+                max-width: 140px;
+                padding: 8px;
+                font-size: 9px;
+            }
+            .controls h3 {
+                font-size: 11px;
+                margin-bottom: 6px;
+            }
+            button {
+                padding: 5px 6px;
+                font-size: 9px;
+                margin: 2px 0;
+            }
+            .control-group label {
+                font-size: 9px;
+            }
+            input[type="checkbox"] {
+                width: 12px;
+                height: 12px;
+            }
+            .info {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .controls {
+                max-width: 120px;
+                padding: 6px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -100,8 +139,8 @@
         <h3>Управление 3D моделью</h3>
         <div class="control-group">
             <button id="showAll">Показать всё</button>
-            <button id="showTubes">Только трубы</button>
-            <button id="showCaps">Только заглушки</button>
+            <button id="showTubes">Трубы</button>
+            <button id="showCaps">Заглушки</button>
             <button id="showCapsule">Капсула ингибитора</button>
         </div>
         <div class="control-group">
@@ -135,13 +174,19 @@
         let isDragging = false;
         let previousMousePosition = { x: 0, y: 0 };
         let rotation = { x: 0, y: 0 };
+        let capsuleManualRotation = false;
         
         function init() {
             scene = new THREE.Scene();
             scene.background = new THREE.Color(0x1a1a2e);
             
-            camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 3000);
-            camera.position.set(800, 600, 1200);
+            camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 3000);
+            
+            if (window.innerWidth < 768) {
+                camera.position.set(600, 400, 1000);
+            } else {
+                camera.position.set(800, 600, 1200);
+            }
             camera.lookAt(0, 0, 0);
             
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -150,7 +195,6 @@
             renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             document.body.appendChild(renderer.domElement);
             
-            // Lighting
             const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
             scene.add(ambientLight);
             
@@ -169,13 +213,12 @@
             
             createModel();
             
-            // Mouse controls
             renderer.domElement.addEventListener('mousedown', onMouseDown);
             renderer.domElement.addEventListener('mousemove', onMouseMove);
             renderer.domElement.addEventListener('mouseup', onMouseUp);
             renderer.domElement.addEventListener('mouseleave', onMouseUp);
+            renderer.domElement.addEventListener('click', onCanvasClick);
             
-            // Touch controls for mobile
             renderer.domElement.addEventListener('touchstart', onTouchStart);
             renderer.domElement.addEventListener('touchmove', onTouchMove);
             renderer.domElement.addEventListener('touchend', onTouchEnd);
@@ -198,7 +241,6 @@
         }
         
         function createModel() {
-            // Materials
             const tubeMaterial = new THREE.MeshStandardMaterial({
                 color: 0x708090,
                 metalness: 0.8,
@@ -217,50 +259,32 @@
                 roughness: 0.25
             });
             
-            const capsuleMaterial = new THREE.MeshStandardMaterial({
-                color: 0xffd700,
-                metalness: 0.4,
-                roughness: 0.5,
-                emissive: 0x554400,
-                emissiveIntensity: 0.2
-            });
-            
             const threadMaterial = new THREE.MeshStandardMaterial({
                 color: 0x606060,
                 metalness: 0.7,
                 roughness: 0.4
             });
             
-            const holeMaterial = new THREE.MeshStandardMaterial({
-                color: 0x1a1a1a,
-                metalness: 0.5,
-                roughness: 0.6
-            });
-            
             tubeGroup = new THREE.Group();
             capsGroup = new THREE.Group();
             connectorGroup = new THREE.Group();
             
-            // DN80 specifications: outer diameter ~88.9mm, inner diameter (with 3mm wall) ~82.9mm
-            const tubeLength = 1500; // 1.5m in mm
+            const tubeLength = 1500;
             const outerRadius = 88.9 / 2;
-            const innerRadius = (88.9 - 6) / 2; // 3mm wall thickness on each side
+            const innerRadius = (88.9 - 6) / 2;
             const threadLength = 10;
             
-            // Create 5 tubes in revolver pattern
-            const tubePositions = [];
             const angleStep = (Math.PI * 2) / 5;
-            const centerRadius = outerRadius * 2.2; // Increased distance so tubes touch but don't overlap
+            const centerRadius = outerRadius * 2.2;
             
             for (let i = 0; i < 5; i++) {
                 const angle = i * angleStep;
                 const x = Math.cos(angle) * centerRadius;
                 const y = Math.sin(angle) * centerRadius;
-                tubePositions.push({ x, y });
                 
-                // Main tube body
+                // Open-ended tube
                 const tubeGeometry = new THREE.CylinderGeometry(
-                    outerRadius, outerRadius, tubeLength, 32, 1, false
+                    outerRadius, outerRadius, tubeLength, 32, 1, true
                 );
                 const tube = new THREE.Mesh(tubeGeometry, tubeMaterial);
                 tube.rotation.z = Math.PI / 2;
@@ -271,15 +295,72 @@
                 
                 // Inner hollow
                 const innerGeometry = new THREE.CylinderGeometry(
-                    innerRadius, innerRadius, tubeLength + 2, 32, 1, false
+                    innerRadius, innerRadius, tubeLength, 32, 1, true
                 );
                 const inner = new THREE.Mesh(innerGeometry, new THREE.MeshStandardMaterial({
-                    color: 0x1a1a1a,
-                    side: THREE.BackSide
+                    color: 0x0a0a0a,
+                    side: THREE.BackSide,
+                    metalness: 0.3,
+                    roughness: 0.8
                 }));
                 inner.rotation.z = Math.PI / 2;
                 inner.position.set(0, x, y);
                 tubeGroup.add(inner);
+                
+                // Inhibitor capsule inside tube
+                const capsuleInside = new THREE.Group();
+                const capRadius = 50 / 2;
+                const capLength = 180;
+                
+                for (let j = 0; j < 6; j++) {
+                    const segLen = capLength / 6;
+                    const segGeo = new THREE.CylinderGeometry(capRadius, capRadius, segLen, 16);
+                    const segMat = new THREE.MeshStandardMaterial({
+                        color: 0xffd700,
+                        metalness: 0.5,
+                        roughness: 0.4,
+                        emissive: 0x554400,
+                        emissiveIntensity: 0.2
+                    });
+                    const seg = new THREE.Mesh(segGeo, segMat);
+                    seg.rotation.z = Math.PI / 2;
+                    seg.position.x = -capLength/2 + segLen/2 + j * segLen;
+                    capsuleInside.add(seg);
+                }
+                
+                for (let j = 0; j < 3; j++) {
+                    const rGeo = new THREE.TorusGeometry(capRadius + 1, 1, 6, 16);
+                    const rMat = new THREE.MeshStandardMaterial({
+                        color: 0x8b7500,
+                        metalness: 0.9,
+                        roughness: 0.1
+                    });
+                    const r = new THREE.Mesh(rGeo, rMat);
+                    r.rotation.y = Math.PI / 2;
+                    r.position.x = -capLength/2 + 30 + j * 60;
+                    capsuleInside.add(r);
+                }
+                
+                const endGeo = new THREE.SphereGeometry(capRadius, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+                const endMat = new THREE.MeshStandardMaterial({
+                    color: 0xffd700,
+                    metalness: 0.7,
+                    roughness: 0.3
+                });
+                
+                const end1 = new THREE.Mesh(endGeo, endMat);
+                end1.rotation.z = -Math.PI / 2;
+                end1.position.x = -capLength/2;
+                capsuleInside.add(end1);
+                
+                const end2 = new THREE.Mesh(endGeo, endMat);
+                end2.rotation.z = Math.PI / 2;
+                end2.position.x = capLength/2;
+                capsuleInside.add(end2);
+                
+                const offsetPos = (Math.random() - 0.5) * 400;
+                capsuleInside.position.set(offsetPos, x, y);
+                tubeGroup.add(capsuleInside);
                 
                 // Thread at beginning
                 for (let j = 0; j < 5; j++) {
@@ -299,8 +380,7 @@
                     tubeGroup.add(thread2);
                 }
                 
-                // Caps (separate group for display control)
-                // Beginning cap
+                // Caps
                 const capGeometry = new THREE.CylinderGeometry(
                     outerRadius + 3, outerRadius + 3, 15, 32
                 );
@@ -310,7 +390,6 @@
                 cap1.castShadow = true;
                 capsGroup.add(cap1);
                 
-                // Cap top
                 const capTopGeometry = new THREE.CylinderGeometry(
                     0, outerRadius + 3, 10, 32
                 );
@@ -319,7 +398,6 @@
                 capTop1.position.set(-tubeLength/2 - 27.5, x, y);
                 capsGroup.add(capTop1);
                 
-                // Ending cap
                 const cap2 = new THREE.Mesh(capGeometry, capMaterial);
                 cap2.rotation.z = Math.PI / 2;
                 cap2.position.set(tubeLength/2 + 20, x, y);
@@ -331,101 +409,48 @@
                 capTop2.position.set(tubeLength/2 + 27.5, x, y);
                 capsGroup.add(capTop2);
                 
-                // Punch holes for inhibitor passage - facing outward
-                const holeRadius = 8; // Small hole radius
-                
-                // Calculate outward direction for this tube
+                // Holes - simple black circles
+                const holeRadius = 8;
                 const outwardX = Math.cos(angle);
                 const outwardY = Math.sin(angle);
                 
-                // Hole 1: Between ring 1 and tube beginning
-                const hole1Position = -tubeLength/2 + 50;
-                
-                // Create indentation for hole
-                const holeIndentGeometry = new THREE.CylinderGeometry(holeRadius * 1.3, holeRadius, 4, 16);
-                const holeIndent1 = new THREE.Mesh(holeIndentGeometry, new THREE.MeshStandardMaterial({
-                    color: 0x2a2a2a,
-                    metalness: 0.6,
-                    roughness: 0.7,
-                    side: THREE.DoubleSide
-                }));
-                holeIndent1.position.set(hole1Position, x + outwardX * (outerRadius - 2), y + outwardY * (outerRadius - 2));
-                holeIndent1.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(holeIndent1);
-                
-                // Create actual hole (dark circle)
-                const holeCircleGeometry = new THREE.CircleGeometry(holeRadius, 16);
-                const holeCircle1 = new THREE.Mesh(holeCircleGeometry, new THREE.MeshStandardMaterial({
+                const hole1Pos = -tubeLength/2 + 50;
+                const holeGeo = new THREE.CircleGeometry(holeRadius, 16);
+                const holeMat = new THREE.MeshBasicMaterial({
                     color: 0x000000,
-                    metalness: 0.3,
-                    roughness: 0.9
-                }));
-                holeCircle1.position.set(hole1Position, x + outwardX * (outerRadius + 0.5), y + outwardY * (outerRadius + 0.5));
-                holeCircle1.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(holeCircle1);
-                
-                // Add metallic rim around hole
-                const holeRimGeometry = new THREE.TorusGeometry(holeRadius + 1, 1, 8, 16);
-                const holeRim1 = new THREE.Mesh(holeRimGeometry, new THREE.MeshStandardMaterial({
-                    color: 0x505050,
-                    metalness: 0.9,
-                    roughness: 0.2
-                }));
-                holeRim1.position.set(hole1Position, x + outwardX * (outerRadius + 0.5), y + outwardY * (outerRadius + 0.5));
-                holeRim1.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(holeRim1);
-                
-                // Hole 2: Between ring 2 and tube ending
-                const hole2Position = tubeLength/2 - 50;
-                
-                const holeIndent2 = new THREE.Mesh(holeIndentGeometry, new THREE.MeshStandardMaterial({
-                    color: 0x2a2a2a,
-                    metalness: 0.6,
-                    roughness: 0.7,
                     side: THREE.DoubleSide
-                }));
-                holeIndent2.position.set(hole2Position, x + outwardX * (outerRadius - 2), y + outwardY * (outerRadius - 2));
-                holeIndent2.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(holeIndent2);
+                });
                 
-                const holeCircle2 = new THREE.Mesh(holeCircleGeometry, new THREE.MeshStandardMaterial({
-                    color: 0x000000,
-                    metalness: 0.3,
-                    roughness: 0.9
-                }));
-                holeCircle2.position.set(hole2Position, x + outwardX * (outerRadius + 0.5), y + outwardY * (outerRadius + 0.5));
-                holeCircle2.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(holeCircle2);
+                const hole1 = new THREE.Mesh(holeGeo, holeMat);
+                hole1.position.set(hole1Pos, x + outwardX * (outerRadius + 0.1), y + outwardY * (outerRadius + 0.1));
+                hole1.rotation.z = -angle + Math.PI/2;
+                tubeGroup.add(hole1);
                 
-                const holeRim2 = new THREE.Mesh(holeRimGeometry, new THREE.MeshStandardMaterial({
-                    color: 0x505050,
-                    metalness: 0.9,
-                    roughness: 0.2
-                }));
-                holeRim2.position.set(hole2Position, x + outwardX * (outerRadius + 0.5), y + outwardY * (outerRadius + 0.5));
-                holeRim2.rotation.z = -angle + Math.PI/2;
-                tubeGroup.add(holeRim2);
+                const hole2Pos = tubeLength/2 - 50;
+                const hole2 = new THREE.Mesh(holeGeo, holeMat);
+                hole2.position.set(hole2Pos, x + outwardX * (outerRadius + 0.1), y + outwardY * (outerRadius + 0.1));
+                hole2.rotation.z = -angle + Math.PI/2;
+                tubeGroup.add(hole2);
             }
             
-            // Ring connectors DN200
+            // Ring connectors - wrap around all pipes from outside
             const connectorOuterRadius = 200 / 2;
-            const connectorInnerRadius = (200 - 20) / 2; // 10mm wall thickness
+            const connectorInnerRadius = (200 - 20) / 2;
             const connectorWidth = 30;
             
-            // Connector 1 (10cm from beginning)
-            const connector1Outer = new THREE.TorusGeometry(
+            const conn1Outer = new THREE.TorusGeometry(
                 connectorOuterRadius, connectorWidth/2, 16, 48
             );
-            const conn1Out = new THREE.Mesh(connector1Outer, connectorMaterial);
+            const conn1Out = new THREE.Mesh(conn1Outer, connectorMaterial);
             conn1Out.rotation.y = Math.PI / 2;
             conn1Out.position.x = -tubeLength/2 + 100;
             conn1Out.castShadow = true;
             connectorGroup.add(conn1Out);
             
-            const connector1Inner = new THREE.TorusGeometry(
+            const conn1Inner = new THREE.TorusGeometry(
                 connectorInnerRadius, connectorWidth/2 - 2, 16, 48
             );
-            const conn1In = new THREE.Mesh(connector1Inner, new THREE.MeshStandardMaterial({
+            const conn1In = new THREE.Mesh(conn1Inner, new THREE.MeshStandardMaterial({
                 color: 0x2a2a2a,
                 metalness: 0.9,
                 roughness: 0.3
@@ -434,7 +459,6 @@
             conn1In.position.x = -tubeLength/2 + 100;
             connectorGroup.add(conn1In);
             
-            // Connector 2 (10cm from ending)
             const conn2Out = conn1Out.clone();
             conn2Out.position.x = tubeLength/2 - 100;
             connectorGroup.add(conn2Out);
@@ -443,36 +467,64 @@
             conn2In.position.x = tubeLength/2 - 100;
             connectorGroup.add(conn2In);
             
-            // Inhibitor capsule (DN50) - shown separately
+            // Separate capsule display
             const capsuleGroup = new THREE.Group();
             const capsuleRadius = 50 / 2;
             const capsuleLength = 200;
             
-            const capsuleBodyGeometry = new THREE.CylinderGeometry(
-                capsuleRadius, capsuleRadius, capsuleLength, 24
-            );
-            const capsuleBody = new THREE.Mesh(capsuleBodyGeometry, capsuleMaterial);
-            capsuleBody.rotation.z = Math.PI / 2;
-            capsuleBody.castShadow = true;
-            capsuleGroup.add(capsuleBody);
+            for (let i = 0; i < 8; i++) {
+                const segmentLength = capsuleLength / 8;
+                const segmentMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xffd700,
+                    metalness: 0.5,
+                    roughness: 0.4,
+                    emissive: 0x554400,
+                    emissiveIntensity: 0.3
+                });
+                
+                const segmentGeometry = new THREE.CylinderGeometry(
+                    capsuleRadius, capsuleRadius, segmentLength, 24
+                );
+                const segment = new THREE.Mesh(segmentGeometry, segmentMaterial);
+                segment.rotation.z = Math.PI / 2;
+                segment.position.x = -capsuleLength/2 + segmentLength/2 + i * segmentLength;
+                segment.castShadow = true;
+                capsuleGroup.add(segment);
+            }
             
-            // Capsule ends
-            const capsuleEndGeometry = new THREE.SphereGeometry(capsuleRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
-            const capsuleEnd1 = new THREE.Mesh(capsuleEndGeometry, capsuleMaterial);
+            for (let i = 0; i < 4; i++) {
+                const ringGeometry = new THREE.TorusGeometry(capsuleRadius + 2, 1.5, 8, 24);
+                const ringMaterial = new THREE.MeshStandardMaterial({
+                    color: 0x8b7500,
+                    metalness: 0.9,
+                    roughness: 0.1
+                });
+                const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+                ring.rotation.y = Math.PI / 2;
+                ring.position.x = -capsuleLength/2 + 30 + i * 50;
+                capsuleGroup.add(ring);
+            }
+            
+            const endCapGeometry = new THREE.SphereGeometry(capsuleRadius, 16, 16, 0, Math.PI * 2, 0, Math.PI / 2);
+            const endCapMaterial = new THREE.MeshStandardMaterial({
+                color: 0xffd700,
+                metalness: 0.7,
+                roughness: 0.3
+            });
+            
+            const capsuleEnd1 = new THREE.Mesh(endCapGeometry, endCapMaterial);
             capsuleEnd1.rotation.z = -Math.PI / 2;
             capsuleEnd1.position.x = -capsuleLength/2;
             capsuleGroup.add(capsuleEnd1);
             
-            const capsuleEnd2 = new THREE.Mesh(capsuleEndGeometry, capsuleMaterial);
+            const capsuleEnd2 = new THREE.Mesh(endCapGeometry, endCapMaterial);
             capsuleEnd2.rotation.z = Math.PI / 2;
             capsuleEnd2.position.x = capsuleLength/2;
             capsuleGroup.add(capsuleEnd2);
             
-            // Position capsule next to assembly
             capsuleGroup.position.set(400, 200, 0);
             capsuleGroup.visible = false;
             
-            // Add label for capsule
             const labelGeometry = new THREE.PlaneGeometry(150, 40);
             const canvas = document.createElement('canvas');
             canvas.width = 256;
@@ -487,9 +539,9 @@
             ctx.fillText('с ингибитором', 128, 50);
             const texture = new THREE.CanvasTexture(canvas);
             const labelMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
-            const label = new THREE.Mesh(labelGeometry, labelMaterial);
-            label.position.set(400, 300, 0);
-            capsuleGroup.add(label);
+            const infoLabel = new THREE.Mesh(labelGeometry, labelMaterial);
+            infoLabel.position.set(0, -100, 0);
+            capsuleGroup.add(infoLabel);
             
             scene.add(tubeGroup);
             scene.add(capsGroup);
@@ -504,6 +556,10 @@
             capsGroup.visible = false;
             connectorGroup.visible = false;
             window.capsuleGroup.visible = false;
+            
+            tubeGroup.position.set(0, 0, 0);
+            capsGroup.position.set(0, 0, 0);
+            connectorGroup.position.set(0, 0, 0);
             
             switch(view) {
                 case 'all':
@@ -520,12 +576,17 @@
                     break;
                 case 'capsule':
                     window.capsuleGroup.visible = true;
+                    window.capsuleGroup.position.set(0, 0, 0);
                     break;
             }
         }
         
         function resetCamera() {
-            camera.position.set(800, 600, 1200);
+            if (window.innerWidth < 768) {
+                camera.position.set(600, 400, 1000);
+            } else {
+                camera.position.set(800, 600, 1200);
+            }
             camera.lookAt(0, 0, 0);
             rotation.x = 0;
             rotation.y = 0;
@@ -537,6 +598,12 @@
                 x: e.clientX,
                 y: e.clientY
             };
+        }
+        
+        function onCanvasClick(e) {
+            if (window.capsuleGroup && window.capsuleGroup.visible) {
+                capsuleManualRotation = !capsuleManualRotation;
+            }
         }
         
         function onMouseMove(e) {
@@ -596,17 +663,20 @@
             camera.aspect = window.innerWidth / window.innerHeight;
             camera.updateProjectionMatrix();
             renderer.setSize(window.innerWidth, window.innerHeight);
+            
+            if (window.innerWidth < 768) {
+                camera.position.set(600, 400, 1000);
+            }
         }
         
         function animate() {
             requestAnimationFrame(animate);
             
             if (autoRotate && !isDragging) {
-                rotation.x += 0.003;
-                rotation.y += 0.002;
+                rotation.x += 0.001;
+                rotation.y += 0.0015;
             }
             
-            // Apply rotation to all groups
             tubeGroup.rotation.x = rotation.x;
             tubeGroup.rotation.y = rotation.y;
             capsGroup.rotation.x = rotation.x;
@@ -614,9 +684,15 @@
             connectorGroup.rotation.x = rotation.x;
             connectorGroup.rotation.y = rotation.y;
             
-            // Capsule rotates independently when visible
-            if (window.capsuleGroup.visible) {
-                window.capsuleGroup.rotation.y += 0.01;
+            if (window.capsuleGroup && window.capsuleGroup.visible) {
+                if (!capsuleManualRotation) {
+                    window.capsuleGroup.rotation.y += 0.005;
+                } else {
+                    if (isDragging) {
+                        window.capsuleGroup.rotation.y = rotation.y * 2;
+                        window.capsuleGroup.rotation.x = rotation.x * 2;
+                    }
+                }
             }
             
             renderer.render(scene, camera);
