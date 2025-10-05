@@ -10,6 +10,10 @@
             overflow: hidden;
             font-family: Arial, sans-serif;
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            transition: background 0.5s ease;
+        }
+        body.white-bg {
+            background: #ffffff;
         }
         canvas {
             display: block;
@@ -26,10 +30,17 @@
             font-size: 11px;
             z-index: 100;
         }
+        .white-bg .controls {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
         .controls h3 {
             margin: 0 0 10px 0;
             color: #1e3c72;
             font-size: 13px;
+        }
+        .white-bg .controls h3 {
+            color: #2a5298;
         }
         .control-group {
             margin: 8px 0;
@@ -62,6 +73,12 @@
         button:active {
             transform: translateY(0);
         }
+        .white-bg button {
+            background: #2a5298;
+        }
+        .white-bg button:hover {
+            background: #1e3c72;
+        }
         .checkbox-group {
             display: flex;
             align-items: center;
@@ -72,6 +89,59 @@
             width: 14px;
             height: 14px;
             cursor: pointer;
+        }
+        
+        /* Background toggle switch */
+        .bg-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 8px 0;
+            padding: 6px 0;
+        }
+        .bg-toggle-label {
+            font-size: 10px;
+            color: #333;
+            font-weight: 600;
+        }
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        input:checked + .toggle-slider {
+            background-color: #2a5298;
+        }
+        input:checked + .toggle-slider:before {
+            transform: translateX(20px);
         }
         
         /* Zoom controls */
@@ -144,10 +214,18 @@
             max-width: 180px;
             z-index: 100;
         }
+        .white-bg .info {
+            background: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
+        }
         .info h4 {
             margin: 0 0 8px 0;
             color: #1e3c72;
             font-size: 12px;
+        }
+        .white-bg .info h4 {
+            color: #2a5298;
         }
         .info p {
             margin: 3px 0;
@@ -178,6 +256,26 @@
             input[type="checkbox"] {
                 width: 12px;
                 height: 12px;
+            }
+            .bg-toggle {
+                margin: 6px 0;
+                padding: 4px 0;
+            }
+            .bg-toggle-label {
+                font-size: 9px;
+            }
+            .toggle-switch {
+                width: 36px;
+                height: 18px;
+            }
+            .toggle-slider:before {
+                height: 14px;
+                width: 14px;
+                left: 2px;
+                bottom: 2px;
+            }
+            input:checked + .toggle-slider:before {
+                transform: translateX(18px);
             }
             .zoom-slider-container {
                 gap: 6px;
@@ -223,6 +321,17 @@
             <div class="checkbox-group">
                 <input type="checkbox" id="toggleRotation" checked>
                 <label for="toggleRotation">Авто-вращение</label>
+            </div>
+        </div>
+        
+        <!-- Background Toggle -->
+        <div class="control-group">
+            <div class="bg-toggle">
+                <span class="bg-toggle-label">Белый фон</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggleBackground">
+                    <span class="toggle-slider"></span>
+                </label>
             </div>
         </div>
         
@@ -332,6 +441,17 @@
             });
             document.getElementById('toggleRotation').addEventListener('change', (e) => {
                 autoRotate = e.target.checked;
+            });
+            
+            // Background toggle event listener
+            document.getElementById('toggleBackground').addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    document.body.classList.add('white-bg');
+                    scene.background = new THREE.Color(0xffffff);
+                } else {
+                    document.body.classList.remove('white-bg');
+                    scene.background = new THREE.Color(0x1a1a2e);
+                }
             });
             
             // Zoom control event listeners
@@ -466,59 +586,71 @@
                 inner.position.set(0, x, y);
                 tubeGroup.add(inner);
                 
-                // Inhibitor capsule inside tube
+                // Inhibitor capsules inside tube - FIXED: Properly spaced to not go through caps
                 const capsuleInside = new THREE.Group();
                 const capRadius = 50 / 2;
                 const capLength = 180;
+                const capsulesCount = 5; // Reduced to 5 to fit properly
                 
-                for (let j = 0; j < 6; j++) {
-                    const segLen = capLength / 6;
-                    const segGeo = new THREE.CylinderGeometry(capRadius, capRadius, segLen, 16);
-                    const segMat = new THREE.MeshStandardMaterial({
+                for (let k = 0; k < capsulesCount; k++) {
+                    const capsuleGroup = new THREE.Group();
+                    
+                    for (let j = 0; j < 6; j++) {
+                        const segLen = capLength / 6;
+                        const segGeo = new THREE.CylinderGeometry(capRadius, capRadius, segLen, 16);
+                        const segMat = new THREE.MeshStandardMaterial({
+                            color: 0xffd700,
+                            metalness: 0.5,
+                            roughness: 0.4,
+                            emissive: 0x554400,
+                            emissiveIntensity: 0.2
+                        });
+                        const seg = new THREE.Mesh(segGeo, segMat);
+                        seg.rotation.z = Math.PI / 2;
+                        seg.position.x = -capLength/2 + segLen/2 + j * segLen;
+                        capsuleGroup.add(seg);
+                    }
+                    
+                    for (let j = 0; j < 3; j++) {
+                        const rGeo = new THREE.TorusGeometry(capRadius + 1, 1, 6, 16);
+                        const rMat = new THREE.MeshStandardMaterial({
+                            color: 0x8b7500,
+                            metalness: 0.9,
+                            roughness: 0.1
+                        });
+                        const r = new THREE.Mesh(rGeo, rMat);
+                        r.rotation.y = Math.PI / 2;
+                        r.position.x = -capLength/2 + 30 + j * 60;
+                        capsuleGroup.add(r);
+                    }
+                    
+                    const endGeo = new THREE.SphereGeometry(capRadius, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2);
+                    const endMat = new THREE.MeshStandardMaterial({
                         color: 0xffd700,
-                        metalness: 0.5,
-                        roughness: 0.4,
-                        emissive: 0x554400,
-                        emissiveIntensity: 0.2
+                        metalness: 0.7,
+                        roughness: 0.3
                     });
-                    const seg = new THREE.Mesh(segGeo, segMat);
-                    seg.rotation.z = Math.PI / 2;
-                    seg.position.x = -capLength/2 + segLen/2 + j * segLen;
-                    capsuleInside.add(seg);
+                    
+                    const end1 = new THREE.Mesh(endGeo, endMat);
+                    end1.rotation.z = -Math.PI / 2;
+                    end1.position.x = -capLength/2;
+                    capsuleGroup.add(end1);
+                    
+                    const end2 = new THREE.Mesh(endGeo, endMat);
+                    end2.rotation.z = Math.PI / 2;
+                    end2.position.x = capLength/2;
+                    capsuleGroup.add(end2);
+                    
+                    // FIXED: Position capsules symmetrically without going through caps
+                    const availableLength = tubeLength - 200; // Leave space for caps
+                    const capsuleSpacing = availableLength / (capsulesCount + 1);
+                    const startPos = -tubeLength/2 + 100 + capsuleSpacing;
+                    const capsulePos = startPos + k * capsuleSpacing;
+                    
+                    capsuleGroup.position.set(capsulePos, x, y);
+                    capsuleInside.add(capsuleGroup);
                 }
                 
-                for (let j = 0; j < 3; j++) {
-                    const rGeo = new THREE.TorusGeometry(capRadius + 1, 1, 6, 16);
-                    const rMat = new THREE.MeshStandardMaterial({
-                        color: 0x8b7500,
-                        metalness: 0.9,
-                        roughness: 0.1
-                    });
-                    const r = new THREE.Mesh(rGeo, rMat);
-                    r.rotation.y = Math.PI / 2;
-                    r.position.x = -capLength/2 + 30 + j * 60;
-                    capsuleInside.add(r);
-                }
-                
-                const endGeo = new THREE.SphereGeometry(capRadius, 12, 12, 0, Math.PI * 2, 0, Math.PI / 2);
-                const endMat = new THREE.MeshStandardMaterial({
-                    color: 0xffd700,
-                    metalness: 0.7,
-                    roughness: 0.3
-                });
-                
-                const end1 = new THREE.Mesh(endGeo, endMat);
-                end1.rotation.z = -Math.PI / 2;
-                end1.position.x = -capLength/2;
-                capsuleInside.add(end1);
-                
-                const end2 = new THREE.Mesh(endGeo, endMat);
-                end2.rotation.z = Math.PI / 2;
-                end2.position.x = capLength/2;
-                capsuleInside.add(end2);
-                
-                const offsetPos = (Math.random() - 0.5) * 400;
-                capsuleInside.position.set(offsetPos, x, y);
                 tubeGroup.add(capsuleInside);
                 
                 // Thread at beginning
@@ -592,39 +724,64 @@
                 tubeGroup.add(hole2);
             }
             
-            // Ring connectors - wrap around all pipes from outside
+            // FIXED: Create connector rings with gaps where they pass through tubes
             const connectorOuterRadius = 200 / 2;
             const connectorInnerRadius = (200 - 20) / 2;
             const connectorWidth = 30;
             
-            const conn1Outer = new THREE.TorusGeometry(
-                connectorOuterRadius, connectorWidth/2, 16, 48
-            );
-            const conn1Out = new THREE.Mesh(conn1Outer, connectorMaterial);
-            conn1Out.rotation.y = Math.PI / 2;
-            conn1Out.position.x = -tubeLength/2 + 100;
-            conn1Out.castShadow = true;
-            connectorGroup.add(conn1Out);
+            function createConnectorRing(radius, width, positionX, isInner = false) {
+                const ringGroup = new THREE.Group();
+                
+                // Define the 5 pipe positions (angles in radians)
+                const pipeAngles = [0, 72, 144, 216, 288].map(deg => deg * Math.PI / 180);
+                const pipeCoverage = Math.PI / 4; // Each pipe covers about 45 degrees
+                
+                // Create ring segments only in the gaps between pipes
+                for (let i = 0; i < 5; i++) {
+                    const gapStartAngle = pipeAngles[i] + pipeCoverage/2;
+                    const gapEndAngle = pipeAngles[(i + 1) % 5] - pipeCoverage/2;
+                    
+                    // Ensure the gap angle is positive
+                    let gapAngle = gapEndAngle - gapStartAngle;
+                    if (gapAngle < 0) {
+                        gapAngle += Math.PI * 2;
+                    }
+                    
+                    // Create segment for this gap
+                    const segmentGeometry = new THREE.TorusGeometry(
+                        radius, width/2, 16, 32, 
+                        gapStartAngle, gapAngle
+                    );
+                    
+                    const material = isInner ? 
+                        new THREE.MeshStandardMaterial({
+                            color: 0x2a2a2a,
+                            metalness: 0.9,
+                            roughness: 0.3
+                        }) : connectorMaterial;
+                    
+                    const segment = new THREE.Mesh(segmentGeometry, material);
+                    segment.rotation.y = Math.PI / 2;
+                    segment.position.x = positionX;
+                    ringGroup.add(segment);
+                }
+                
+                return ringGroup;
+            }
             
-            const conn1Inner = new THREE.TorusGeometry(
-                connectorInnerRadius, connectorWidth/2 - 2, 16, 48
-            );
-            const conn1In = new THREE.Mesh(conn1Inner, new THREE.MeshStandardMaterial({
-                color: 0x2a2a2a,
-                metalness: 0.9,
-                roughness: 0.3
-            }));
-            conn1In.rotation.y = Math.PI / 2;
-            conn1In.position.x = -tubeLength/2 + 100;
-            connectorGroup.add(conn1In);
+            // Create outer connector rings (the big black rings)
+            const outerRing1 = createConnectorRing(connectorOuterRadius, connectorWidth, -tubeLength/2 + 100);
+            connectorGroup.add(outerRing1);
             
-            const conn2Out = conn1Out.clone();
-            conn2Out.position.x = tubeLength/2 - 100;
-            connectorGroup.add(conn2Out);
+            const outerRing2 = createConnectorRing(connectorOuterRadius, connectorWidth, tubeLength/2 - 100);
+            connectorGroup.add(outerRing2);
             
-            const conn2In = conn1In.clone();
-            conn2In.position.x = tubeLength/2 - 100;
-            connectorGroup.add(conn2In);
+            // Create inner connector rings
+            const innerRing1 = createConnectorRing(connectorInnerRadius, connectorWidth/2 - 2, -tubeLength/2 + 100, true);
+            connectorGroup.add(innerRing1);
+            
+            const innerRing2 = createConnectorRing(connectorInnerRadius, connectorWidth/2 - 2, tubeLength/2 - 100, true);
+            connectorGroup.add(innerRing2);
             
             // Separate capsule display
             const capsuleGroup = new THREE.Group();
