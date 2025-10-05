@@ -29,12 +29,12 @@
             height: 100%;
         }
         .controls {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 8px;
+            background: rgba(255, 255, 255, 0.98);
+            padding: 6px;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.2);
             font-size: 10px;
             z-index: 100;
-            max-height: 30vh;
+            max-height: 25vh;
             overflow-y: auto;
         }
         .white-bg .controls {
@@ -42,29 +42,22 @@
             box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
         }
         .control-group {
-            margin: 6px 0;
-        }
-        .control-group label {
-            display: block;
-            margin-bottom: 3px;
-            color: #333;
-            font-size: 10px;
-            font-weight: 600;
+            margin: 4px 0;
         }
         .button-grid {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr 1fr;
-            gap: 4px;
-            margin-bottom: 6px;
+            gap: 3px;
+            margin-bottom: 5px;
         }
         button {
-            padding: 6px 4px;
+            padding: 5px 3px;
             border: none;
-            border-radius: 4px;
+            border-radius: 3px;
             background: #2a5298;
             color: white;
             cursor: pointer;
-            font-size: 9px;
+            font-size: 8px;
             font-weight: 600;
             transition: all 0.3s;
         }
@@ -78,30 +71,38 @@
         }
         .compact-row {
             display: grid;
-            grid-template-columns: 1fr auto;
-            gap: 8px;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
             align-items: center;
-            margin: 4px 0;
-            padding: 5px;
+            margin: 3px 0;
+            padding: 4px;
             background: rgba(42, 82, 152, 0.1);
-            border-radius: 4px;
+            border-radius: 3px;
         }
-        .compact-row label {
+        .compact-item {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            justify-content: center;
+        }
+        .compact-item label {
             margin: 0;
-            font-size: 9px;
+            font-size: 8px;
             font-weight: 600;
             color: #333;
+            white-space: nowrap;
         }
         input[type="checkbox"] {
-            width: 14px;
-            height: 14px;
+            width: 12px;
+            height: 12px;
             cursor: pointer;
+            margin: 0;
         }
         .toggle-switch {
             position: relative;
             display: inline-block;
-            width: 40px;
-            height: 20px;
+            width: 30px;
+            height: 16px;
         }
         .toggle-switch input {
             opacity: 0;
@@ -117,13 +118,13 @@
             bottom: 0;
             background-color: #ccc;
             transition: .4s;
-            border-radius: 20px;
+            border-radius: 16px;
         }
         .toggle-slider:before {
             position: absolute;
             content: "";
-            height: 14px;
-            width: 14px;
+            height: 10px;
+            width: 10px;
             left: 3px;
             bottom: 3px;
             background-color: white;
@@ -134,23 +135,23 @@
             background-color: #2a5298;
         }
         input:checked + .toggle-slider:before {
-            transform: translateX(20px);
+            transform: translateX(14px);
         }
         .zoom-controls {
-            margin-top: 6px;
-            padding: 6px;
+            margin-top: 4px;
+            padding: 4px;
             background: rgba(42, 82, 152, 0.1);
-            border-radius: 4px;
+            border-radius: 3px;
         }
         .zoom-slider-container {
             display: flex;
             align-items: center;
-            gap: 6px;
-            margin: 4px 0;
+            gap: 4px;
+            margin: 3px 0;
         }
         .zoom-slider {
             flex: 1;
-            height: 4px;
+            height: 3px;
             -webkit-appearance: none;
             background: #ddd;
             border-radius: 2px;
@@ -158,8 +159,8 @@
         }
         .zoom-slider::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: #2a5298;
             cursor: pointer;
@@ -167,8 +168,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .zoom-slider::-moz-range-thumb {
-            width: 16px;
-            height: 16px;
+            width: 14px;
+            height: 14px;
             border-radius: 50%;
             background: #2a5298;
             cursor: pointer;
@@ -176,20 +177,55 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
         }
         .zoom-value {
-            font-size: 9px;
+            font-size: 8px;
             color: #333;
             font-weight: 700;
-            min-width: 30px;
+            min-width: 25px;
             text-align: center;
             background: white;
-            padding: 2px 4px;
-            border-radius: 3px;
+            padding: 1px 3px;
+            border-radius: 2px;
         }
         .zoom-buttons {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4px;
-            margin-top: 4px;
+            gap: 3px;
+            margin-top: 3px;
+        }
+        
+        /* Mobile optimization */
+        @media (max-width: 768px) {
+            .controls {
+                padding: 4px;
+                max-height: 22vh;
+            }
+            .button-grid {
+                gap: 2px;
+                margin-bottom: 3px;
+            }
+            button {
+                padding: 4px 2px;
+                font-size: 7px;
+            }
+            .compact-row {
+                gap: 3px;
+                margin: 2px 0;
+                padding: 3px;
+            }
+            .compact-item label {
+                font-size: 7px;
+            }
+            .toggle-switch {
+                width: 28px;
+                height: 14px;
+            }
+            .toggle-slider:before {
+                height: 8px;
+                width: 8px;
+            }
+            input:checked + .toggle-slider:before {
+                transform: translateX(12px);
+            }
         }
     </style>
 </head>
@@ -207,25 +243,24 @@
         </div>
         
         <div class="compact-row">
-            <label for="toggleConnectors">Показать кольца</label>
-            <input type="checkbox" id="toggleConnectors" checked>
-        </div>
-        
-        <div class="compact-row">
-            <label for="toggleRotation">Авто-вращение</label>
-            <input type="checkbox" id="toggleRotation" checked>
-        </div>
-        
-        <div class="compact-row">
-            <label for="toggleBackground">Белый фон</label>
-            <label class="toggle-switch">
-                <input type="checkbox" id="toggleBackground">
-                <span class="toggle-slider"></span>
-            </label>
+            <div class="compact-item">
+                <input type="checkbox" id="toggleConnectors" checked>
+                <label for="toggleConnectors">Кольца</label>
+            </div>
+            <div class="compact-item">
+                <input type="checkbox" id="toggleRotation" checked>
+                <label for="toggleRotation">Вращение</label>
+            </div>
+            <div class="compact-item">
+                <label for="toggleBackground">Фон</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="toggleBackground">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
         </div>
         
         <div class="zoom-controls">
-            <label>Масштаб:</label>
             <div class="zoom-slider-container">
                 <input type="range" id="zoomSlider" class="zoom-slider" min="100" max="4000" value="1200" step="50">
                 <span id="zoomValue" class="zoom-value">1200</span>
@@ -234,10 +269,6 @@
                 <button id="zoomIn">➕ Приблизить</button>
                 <button id="zoomOut">➖ Отдалить</button>
             </div>
-        </div>
-        
-        <div class="control-group">
-            <button id="resetView" style="width: 100%; padding: 6px;">🔄 Сбросить камеру</button>
         </div>
     </div>
 
@@ -289,7 +320,6 @@
             document.getElementById('showTubes').addEventListener('click', () => showView('tubes'));
             document.getElementById('showCaps').addEventListener('click', () => showView('caps'));
             document.getElementById('showCapsule').addEventListener('click', () => showView('capsule'));
-            document.getElementById('resetView').addEventListener('click', resetCamera);
             document.getElementById('toggleConnectors').addEventListener('change', (e) => { connectorGroup.visible = e.target.checked; });
             document.getElementById('toggleRotation').addEventListener('change', (e) => { autoRotate = e.target.checked; });
             document.getElementById('toggleBackground').addEventListener('change', (e) => {
@@ -481,14 +511,6 @@
                 window.capsuleGroup.position.set(0, 0, 0);
                 window.capsuleGroup.rotation.set(0, 0, 0);
             }
-        }
-        
-        function resetCamera() {
-            zoomLevel = 1200;
-            document.getElementById('zoomSlider').value = zoomLevel;
-            document.getElementById('zoomValue').textContent = zoomLevel;
-            updateZoom();
-            rotation.x = rotation.y = 0;
         }
         
         function onMouseDown(e) { isDragging = true; previousMousePosition = { x: e.clientX, y: e.clientY }; }
