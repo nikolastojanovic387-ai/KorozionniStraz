@@ -9,7 +9,7 @@
             margin: 0;
             overflow: hidden;
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            background: linear-gradient(135deg, #4a76b8 0%, #5a8ad8 100%);
             transition: background 0.5s ease;
             display: flex;
             flex-direction: column;
@@ -321,12 +321,12 @@
         
         <div class="zoom-controls">
             <div class="zoom-slider-container">
-                <input type="range" id="zoomSlider" class="zoom-slider" min="100" max="4000" value="2000" step="50">
-                <span id="zoomValue" class="zoom-value">2000</span>
+                <input type="range" id="zoomSlider" class="zoom-slider" min="0" max="100" value="50">
+                <span id="zoomValue" class="zoom-value">50%</span>
             </div>
             <div class="zoom-buttons">
-                <button id="zoomIn">➕ Приблизить</button>
-                <button id="zoomOut">➖ Отдалить</button>
+                <button id="zoomIn">➖ Отдалить</button>
+                <button id="zoomOut">➕ Приблизить</button>
             </div>
         </div>
     </div>
@@ -335,8 +335,8 @@
     <script>
         let scene, camera, renderer, tubeGroup, capsGroup, connectorGroup, autoRotate = true;
         let isDragging = false, previousMousePosition = { x: 0, y: 0 }, rotation = { x: 0, y: 0 };
-        let capsuleManualRotation = false, zoomLevel = 2000;
-        const minZoom = 100, maxZoom = 4000, zoomStep = 100;
+        let capsuleManualRotation = false, zoomLevel = 50;
+        const minZoom = 0, maxZoom = 100, zoomStep = 5;
         
         // Pinch-to-zoom variables
         let initialPinchDistance = 0;
@@ -344,15 +344,14 @@
         
         function init() {
             scene = new THREE.Scene();
-            scene.background = new THREE.Color(0x1a1a2e);
+            scene.background = new THREE.Color(0x4a76b8); // Lighter blue background
             
             const container = document.getElementById('canvas-container');
             const width = container.clientWidth;
             const height = container.clientHeight;
             
             camera = new THREE.PerspectiveCamera(50, width / height, 0.1, 5000);
-            camera.position.set(800, 600, 1200);
-            camera.lookAt(0, 0, 0);
+            updateCameraPosition();
             
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(width, height);
@@ -391,13 +390,13 @@
             document.getElementById('toggleRotation').addEventListener('change', (e) => { autoRotate = e.target.checked; });
             document.getElementById('toggleBackground').addEventListener('change', (e) => {
                 if (e.target.checked) { document.body.classList.add('white-bg'); scene.background = new THREE.Color(0xffffff); }
-                else { document.body.classList.remove('white-bg'); scene.background = new THREE.Color(0x1a1a2e); }
+                else { document.body.classList.remove('white-bg'); scene.background = new THREE.Color(0x4a76b8); }
             });
             
             const zs = document.getElementById('zoomSlider'), zv = document.getElementById('zoomValue');
-            zs.addEventListener('input', (e) => { zoomLevel = parseInt(e.target.value); updateZoom(); zv.textContent = zoomLevel; });
-            document.getElementById('zoomIn').addEventListener('click', () => { zoomLevel = Math.max(minZoom, zoomLevel - zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel; });
-            document.getElementById('zoomOut').addEventListener('click', () => { zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel; });
+            zs.addEventListener('input', (e) => { zoomLevel = parseInt(e.target.value); updateZoom(); zv.textContent = zoomLevel + '%'; });
+            document.getElementById('zoomIn').addEventListener('click', () => { zoomLevel = Math.max(minZoom, zoomLevel - zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel + '%'; });
+            document.getElementById('zoomOut').addEventListener('click', () => { zoomLevel = Math.min(maxZoom, zoomLevel + zoomStep); updateZoom(); zs.value = zoomLevel; zv.textContent = zoomLevel + '%'; });
             
             // Initial zoom update
             updateZoom();
@@ -405,15 +404,21 @@
             animate();
         }
         
-        function updateZoom() {
+        function updateCameraPosition() {
+            // Convert 0-100 to actual camera distance (100-4000 range)
+            const actualDistance = 100 + (4000 - 100) * (1 - zoomLevel / 100);
             const dir = new THREE.Vector3();
             camera.getWorldDirection(dir).normalize();
-            camera.position.copy(new THREE.Vector3(0,0,0)).sub(dir.multiplyScalar(zoomLevel));
+            camera.position.copy(new THREE.Vector3(0,0,0)).sub(dir.multiplyScalar(actualDistance));
             camera.lookAt(0,0,0);
+        }
+        
+        function updateZoom() {
+            updateCameraPosition();
             
             // Update slider and value display
             document.getElementById('zoomSlider').value = zoomLevel;
-            document.getElementById('zoomValue').textContent = zoomLevel;
+            document.getElementById('zoomValue').textContent = zoomLevel + '%';
         }
         
         function onMouseWheel(e) {
@@ -493,7 +498,8 @@
         }
         
         function createModel() {
-            const tubeMat = new THREE.MeshStandardMaterial({ color: 0x708090, metalness: 0.8, roughness: 0.3 });
+            // Lighter silvery metallic color for all 5 pipes
+            const tubeMat = new THREE.MeshStandardMaterial({ color: 0xc0c8d0, metalness: 0.9, roughness: 0.2 });
             const connMat = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.9, roughness: 0.2 });
             const capMat = new THREE.MeshStandardMaterial({ color: 0x2c3e50, metalness: 0.85, roughness: 0.25 });
             const thrMat = new THREE.MeshStandardMaterial({ color: 0x606060, metalness: 0.7, roughness: 0.4 });
@@ -556,6 +562,7 @@
                     tubeGroup.add(t2);
                 }
                 
+                // Original simple caps (no bolt details)
                 const c1 = new THREE.Mesh(new THREE.CylinderGeometry(oRad+3, oRad+3, 15, 32), capMat);
                 c1.rotation.z = Math.PI/2;
                 c1.position.set(-tLen/2-20, x, y);
