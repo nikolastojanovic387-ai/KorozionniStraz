@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -28,32 +27,40 @@
             display: block;
             width: 100%;
             height: 100%;
+            position: relative;
+            z-index: 1;
         }
         
         /* Watermark styling */
         .watermark {
             position: absolute;
-            color: rgba(255, 255, 255, 0.6);
-            font-size: 16px;
+            color: rgba(255, 255, 255, 0.75);
             font-weight: 600;
-            z-index: 10;
+            z-index: 100;
             pointer-events: none;
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.5);
             transition: color 0.3s ease;
+            padding: 8px 12px;
+            border-radius: 6px;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(2px);
         }
         .watermark-creator {
             top: 15px;
             right: 15px;
+            font-size: 16px;
         }
         .watermark-device {
             bottom: 15px;
             left: 15px;
             font-size: 18px;
             font-weight: 700;
+            background: rgba(0, 0, 0, 0.25);
         }
         .white-bg .watermark {
-            color: rgba(0, 0, 0, 0.4);
-            text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+            color: rgba(0, 0, 0, 0.7);
+            text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.7);
+            background: rgba(255, 255, 255, 0.3);
         }
         
         .controls {
@@ -67,6 +74,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            position: relative;
         }
         .white-bg .controls {
             background: rgba(255, 255, 255, 0.98);
@@ -233,11 +241,13 @@
                 gap: 10px;
             }
             .watermark {
-                font-size: 14px;
+                padding: 10px 14px;
+                z-index: 1000; /* Higher z-index for mobile */
             }
             .watermark-creator {
                 top: 10px;
                 right: 10px;
+                font-size: 14px;
             }
             .watermark-device {
                 bottom: 10px;
@@ -312,11 +322,12 @@
                 gap: 8px;
             }
             .watermark {
-                font-size: 12px;
+                padding: 8px 10px;
             }
             .watermark-creator {
                 top: 8px;
                 right: 8px;
+                font-size: 12px;
             }
             .watermark-device {
                 bottom: 8px;
@@ -336,6 +347,16 @@
             }
             .compact-item label {
                 font-size: 11px;
+            }
+        }
+
+        /* Extra small screens */
+        @media (max-width: 360px) {
+            .watermark-creator {
+                font-size: 11px;
+            }
+            .watermark-device {
+                font-size: 13px;
             }
         }
     </style>
@@ -412,7 +433,12 @@
             renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setSize(width, height);
             renderer.shadowMap.enabled = true;
-            container.appendChild(renderer.domElement);
+            
+            // Ensure canvas is properly positioned
+            const canvas = renderer.domElement;
+            canvas.style.position = 'relative';
+            canvas.style.zIndex = '1';
+            container.appendChild(canvas);
             
             scene.add(new THREE.AmbientLight(0xffffff, 0.6));
             const dl1 = new THREE.DirectionalLight(0xffffff, 0.8);
